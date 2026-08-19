@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose an addition to the public SDK
+title: "[feat]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The SDK covers **only** the public API (`api.supportly.cc`).
+        Panel / dashboard / admin routes will be declined.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: Method names, types, and an example snippet.
+    validations:
+      required: true
+  - type: textarea
+    id: openapi
+    attributes:
+      label: OpenAPI path
+      description: If this is a new public route, link the docs/OpenAPI path (`/v1/…`).

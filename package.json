@@ -1,0 +1,19 @@
+{
+  "name": "supportly-sdk-repo",
+  "private": true,
+  "description": "Public Git repository for @supportly/sdk (npm package lives in typescript/)",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "test": "pnpm --dir typescript test",
+    "typecheck": "pnpm --dir typescript typecheck",
+    "build": "pnpm --dir typescript build",
+    "pack:check": "pnpm --dir typescript pack --dry-run",
+    "release:patch": "node scripts/bump.mjs patch",
+    "release:minor": "node scripts/bump.mjs minor",
+    "release:major": "node scripts/bump.mjs major"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

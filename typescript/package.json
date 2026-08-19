@@ -1,0 +1,75 @@
+{
+  "name": "@supportly/sdk",
+  "version": "1.2.1",
+  "description": "Official TypeScript SDK for the Supportly public API — messages, conversations, channels, attachments, webhooks and realtime",
+  "license": "MIT",
+  "author": "Supportly <ac@supportly.cc>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/belurgas/supportly-sdk.git",
+    "directory": "typescript"
+  },
+  "homepage": "https://docs.supportly.cc/docs/sdk/typescript",
+  "bugs": "https://github.com/belurgas/supportly-sdk/issues",
+  "keywords": [
+    "supportly",
+    "api",
+    "sdk",
+    "customer-support",
+    "chat",
+    "webhook",
+    "messaging"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks.d.ts",
+      "import": "./dist/webhooks.js",
+      "require": "./dist/webhooks.cjs"
+    },
+    "./realtime": {
+      "types": "./dist/realtime-entry.d.ts",
+      "import": "./dist/realtime-entry.js",
+      "require": "./dist/realtime-entry.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "release:patch": "node ../scripts/bump.mjs patch",
+    "release:minor": "node ../scripts/bump.mjs minor",
+    "release:major": "node ../scripts/bump.mjs major"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
