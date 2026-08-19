@@ -31,6 +31,8 @@ for (const [name, entry] of Object.entries(entries)) {
       platform: "neutral",
       target: "es2022",
       sourcemap: true,
+      // Node 18 webhook HMAC: dynamic `import("node:crypto")`. Не бандлить.
+      external: ["node:crypto", "crypto"],
     });
   }
 }

@@ -70,14 +70,26 @@ function toHex(buffer: ArrayBuffer): string {
   return Array.from(new Uint8Array(buffer), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function subtle(): SubtleCrypto {
-  const crypto = globalThis.crypto;
-  if (!crypto?.subtle) {
-    throw new Error(
-      "Web Crypto is unavailable — webhook verification needs `globalThis.crypto.subtle` (Node 18+, Deno, Bun, browsers)",
-    );
+/**
+ * Web Crypto. Node 19+/browsers/edge: `globalThis.crypto.subtle`.
+ * Node 18: subtle живёт на `node:crypto.webcrypto`, не на globalThis.
+ */
+async function getSubtle(): Promise<SubtleCrypto> {
+  const fromGlobal = globalThis.crypto?.subtle;
+  if (fromGlobal) return fromGlobal;
+
+  try {
+    const { webcrypto } = await import("node:crypto");
+    // Node's SubtleCrypto type and DOM's are not identical under @types/node 22.
+    const nodeSubtle = webcrypto?.subtle as unknown as SubtleCrypto | undefined;
+    if (nodeSubtle) return nodeSubtle;
+  } catch {
+    // Браузер / edge без node:crypto — ниже общий error.
   }
-  return crypto.subtle;
+
+  throw new Error(
+    "Web Crypto is unavailable — webhook verification needs `crypto.subtle` (Node 18+: node:crypto.webcrypto; browsers, Deno, Bun)",
+  );
 }
 
 /**
@@ -105,7 +117,8 @@ export async function signWebhookBody(
   timestampSeconds: number,
   body: WebhookBody,
 ): Promise<string> {
-  const key = await subtle().importKey(
+  const subtle = await getSubtle();
+  const key = await subtle.importKey(
     "raw",
     new TextEncoder().encode(secret) as BufferSource,
     { name: "HMAC", hash: "SHA-256" },
@@ -119,7 +132,7 @@ export async function signWebhookBody(
   signed.set(prefix, 0);
   signed.set(bodyBytes, prefix.length);
 
-  const mac = await subtle().sign("HMAC", key, signed as BufferSource);
+  const mac = await subtle.sign("HMAC", key, signed as BufferSource);
   return `${SIGNATURE_PREFIX}${toHex(mac)}`;
 }
 

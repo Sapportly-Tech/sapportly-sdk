@@ -56,7 +56,10 @@ pnpm publish --access public
 1. [npmjs.com](https://www.npmjs.com/) → создать (или войти в) org **`supportly`**. Scope пакета — `@supportly/sdk`.
 2. Включить 2FA на аккаунте, который публикует.
 3. Automation token: npm → Access Tokens → **Granular Automation** или classic Automation (не publish-with-OTP).
-4. GitHub: **Supportly-Tech/supportly-sdk** → Settings → Secrets and variables → Actions → `NPM_TOKEN`. Имя секрета должно быть именно `NPM_TOKEN`.
+4. Открыть секрет репозитория (нужны права Admin):
+   **https://github.com/Supportly-Tech/supportly-sdk/settings/secrets/actions**
+   → **New repository secret** → Name: `NPM_TOKEN` (точно так) → Value: токен → Add secret.
+   Не кладите токен в `.npmrc` в git и не в код.
 5. Опционально: npm → пакет → Trusted Publisher → GitHub Actions, репозиторий `Supportly-Tech/supportly-sdk`, workflow `publish.yml`. Тогда provenance идёт через OIDC.
 
 Локально `publishConfig.provenance` требует OIDC (GitHub Actions). С ноутбука лучше не публиковать — только тег.

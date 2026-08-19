@@ -7,6 +7,7 @@
 - Wire helpers `isAgentRole` / `isAgentReply` / `isVisitorMessage` match the dashboard mapping.
 - **`ai.draft` is not recorded** in the dual-delivery seen-set (it reuses the inbound `message_id`).
 - Generated `conversations.reply` keys are prefixed `agent-reply-` so REST history can tell them apart from ingest.
+- **Node 18 webhooks:** HMAC uses `node:crypto.webcrypto` when `globalThis.crypto.subtle` is missing.
 
 ## 1.2.0 — 2026-08-19
 
