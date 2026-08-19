@@ -70,10 +70,23 @@ jobs:
           name: supportly-sdk-tarball
           path: "*.tgz"
 
+      - name: Require NPM_TOKEN
+        if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "Repo secret NPM_TOKEN is empty. Add an npm Automation token at Settings → Secrets → Actions."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
         if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
         working-directory: typescript
-        run: pnpm publish --no-git-checks --access public --provenance
+        run: |
+          printf '%s\n' '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}' 'always-auth=true' > .npmrc
+          npm publish --access public --provenance
+          rm -f .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

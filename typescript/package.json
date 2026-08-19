@@ -6,11 +6,11 @@
   "author": "Supportly <ac@supportly.cc>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/belurgas/supportly-sdk.git",
+    "url": "git+https://github.com/Supportly-Tech/supportly-sdk.git",
     "directory": "typescript"
   },
   "homepage": "https://docs.supportly.cc/docs/sdk/typescript",
-  "bugs": "https://github.com/belurgas/supportly-sdk/issues",
+  "bugs": "https://github.com/Supportly-Tech/supportly-sdk/issues",
   "keywords": [
     "supportly",
     "api",
@@ -63,7 +63,13 @@
     "@types/node": "^22.10.0",
     "esbuild": "^0.25.0",
     "typescript": "^5.7.3",
+    "vite": "^6.3.6",
     "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^6.3.6"
+    }
   },
   "engines": {
     "node": ">=18"

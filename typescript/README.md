@@ -1,12 +1,12 @@
 # @supportly/sdk
 
 [![npm](https://img.shields.io/npm/v/@supportly/sdk.svg)](https://www.npmjs.com/package/@supportly/sdk)
-[![CI](https://github.com/belurgas/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/belurgas/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@supportly/sdk.svg)](LICENSE)
 
 Official TypeScript client for the [Supportly](https://supportly.cc) public API.
 
-Source: [github.com/belurgas/supportly-sdk](https://github.com/belurgas/supportly-sdk) · Docs: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript)
+Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-Tech/supportly-sdk) · Docs: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript)
 
 - **Runs anywhere `fetch` does** — Node 18+, Bun, Deno, Cloudflare Workers, browsers.
 - **No runtime dependencies.**
@@ -350,7 +350,7 @@ are intentionally absent from this SDK and from `packages/api/openapi.json`.
 ## Development
 
 ```bash
-git clone https://github.com/belurgas/supportly-sdk.git
+git clone https://github.com/Supportly-Tech/supportly-sdk.git
 cd supportly-sdk/typescript
 pnpm install
 pnpm test

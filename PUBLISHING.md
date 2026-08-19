@@ -1,6 +1,6 @@
 # Публикация `@supportly/sdk`
 
-Канонический публичный репозиторий: **https://github.com/belurgas/supportly-sdk**
+Канонический публичный репозиторий: **https://github.com/Supportly-Tech/supportly-sdk**
 
 В монорепо Supportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу `vX.Y.Z`.
 
@@ -55,9 +55,9 @@ pnpm publish --access public
 
 1. [npmjs.com](https://www.npmjs.com/) → создать (или войти в) org **`supportly`**. Scope пакета — `@supportly/sdk`.
 2. Включить 2FA на аккаунте, который публикует.
-3. Automation token: npm → Access Tokens → Granular / Classic **Automation** (не publish-with-2FA prompt).
-4. GitHub repo → Settings → Secrets → Actions → `NPM_TOKEN`.
-5. Опционально: npm → пакет → Trusted Publisher → GitHub Actions, репозиторий `belurgas/supportly-sdk`, workflow `publish.yml`. Тогда provenance работает через OIDC; `NPM_TOKEN` всё равно оставляют как запасной.
+3. Automation token: npm → Access Tokens → **Granular Automation** или classic Automation (не publish-with-OTP).
+4. GitHub: **Supportly-Tech/supportly-sdk** → Settings → Secrets and variables → Actions → `NPM_TOKEN`. Имя секрета должно быть именно `NPM_TOKEN`.
+5. Опционально: npm → пакет → Trusted Publisher → GitHub Actions, репозиторий `Supportly-Tech/supportly-sdk`, workflow `publish.yml`. Тогда provenance идёт через OIDC.
 
 Локально `publishConfig.provenance` требует OIDC (GitHub Actions). С ноутбука лучше не публиковать — только тег.
 

@@ -1,11 +1,11 @@
 # Supportly SDKs
 
 [![npm](https://img.shields.io/npm/v/@supportly/sdk.svg)](https://www.npmjs.com/package/@supportly/sdk)
-[![CI](https://github.com/belurgas/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/belurgas/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 
 Публичный репозиторий [`@supportly/sdk`](https://www.npmjs.com/package/@supportly/sdk) — TypeScript-клиент [публичного REST API](https://api.supportly.cc) Supportly.
 
-**GitHub (клонировать в GitHub Desktop):** https://github.com/belurgas/supportly-sdk
+**GitHub (клонировать в GitHub Desktop):** https://github.com/Supportly-Tech/supportly-sdk
 
 ```bash
 npm install @supportly/sdk
