@@ -34,7 +34,7 @@
    git push origin main --tags
    ```
 
-4. Тег запускает [`.github/workflows/publish.yml`](.github/workflows/publish.yml): typecheck → test → build → `pnpm publish --access public --provenance`.
+4. Тег запускает [`.github/workflows/publish.yml`](.github/workflows/publish.yml): typecheck → test → build → `npm publish` через **OIDC** (без `NPM_TOKEN`).
 5. Проверьте [npm](https://www.npmjs.com/package/@supportly/sdk) и GitHub Release.
 
 Dry-run без публикации: Actions → Publish → `workflow_dispatch` с `dry_run=true`.
@@ -51,18 +51,28 @@ pnpm publish --access public
 
 Нужен `npm login` под аккаунтом с правом писать в org **`@supportly`**.
 
-## Первый раз: npm org и GitHub secret
+## Первый раз: npm Trusted Publishing (без токена)
 
-1. [npmjs.com](https://www.npmjs.com/) → создать (или войти в) org **`supportly`**. Scope пакета — `@supportly/sdk`.
-2. Включить 2FA на аккаунте, который публикует.
-3. Automation token: npm → Access Tokens → **Granular Automation** или classic Automation (не publish-with-OTP).
-4. Открыть секрет репозитория (нужны права Admin):
-   **https://github.com/Supportly-Tech/supportly-sdk/settings/secrets/actions**
-   → **New repository secret** → Name: `NPM_TOKEN` (точно так) → Value: токен → Add secret.
-   Не кладите токен в `.npmrc` в git и не в код.
-5. Опционально: npm → пакет → Trusted Publisher → GitHub Actions, репозиторий `Supportly-Tech/supportly-sdk`, workflow `publish.yml`. Тогда provenance идёт через OIDC.
+Секрет `NPM_TOKEN` **не нужен**. CI публикует по OIDC. Обычный granular-токен с 2FA даёт `403` — так и было.
 
-Локально `publishConfig.provenance` требует OIDC (GitHub Actions). С ноутбука лучше не публиковать — только тег.
+1. Войти на [npmjs.com](https://www.npmjs.com/) в аккаунт с правом писать в org **`supportly`** (`@supportly/sdk`).
+2. Если пакета ещё нет — один раз с ноутбука (интерактивно, с 2FA):
+
+   ```bash
+   cd typescript
+   pnpm build
+   npm login
+   npm publish --access public
+   ```
+
+3. На странице пакета: **Settings → Trusted Publisher → GitHub Actions**:
+   - Organization or user: `Supportly-Tech`
+   - Repository: `supportly-sdk`
+   - Workflow filename: `publish.yml` (только имя файла)
+   - Allowed actions: **npm publish**
+4. Дальше релизы только тегом `vX.Y.Z`. `NPM_TOKEN` в GitHub можно удалить.
+
+Локальный `npm publish` без логина не используйте.
 
 ## Что попадает в tarball
 

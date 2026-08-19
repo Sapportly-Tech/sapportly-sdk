@@ -1,7 +1,11 @@
 name: Publish
 
-# Публикует @supportly/sdk на npm по semver-тегу.
-# Формат тега: v1.2.3 — обязан совпадать с typescript/package.json.
+# Публикует @supportly/sdk по semver-тегу через npm Trusted Publishing (OIDC).
+# Тег: v1.2.3 — обязан совпадать с typescript/package.json.
+# npmjs.com → пакет → Trusted Publisher:
+#   GitHub org/user: Supportly-Tech
+#   Repository: supportly-sdk
+#   Workflow filename: publish.yml
 on:
   push:
     tags:
@@ -28,10 +32,12 @@ jobs:
         with:
           version: 9.15.0
 
+      # Node 24 ships npm 11.5+, required for OIDC trusted publishing.
+      # Do not set registry-url: setup-node would write always-auth .npmrc
+      # with NODE_AUTH_TOKEN and npm would skip OIDC (403 if the token has 2FA).
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+          node-version: 24
           cache: pnpm
           cache-dependency-path: typescript/pnpm-lock.yaml
 
@@ -70,25 +76,10 @@ jobs:
           name: supportly-sdk-tarball
           path: "*.tgz"
 
-      - name: Require NPM_TOKEN
-        if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
-        run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "Repo secret NPM_TOKEN is empty. Add an npm Automation token at Settings → Secrets → Actions."
-            exit 1
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Publish to npm
         if: ${{ github.event_name == 'push' || inputs.dry_run == false }}
         working-directory: typescript
-        run: |
-          printf '%s\n' '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}' 'always-auth=true' > .npmrc
-          npm publish --access public --provenance
-          rm -f .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       - name: GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
