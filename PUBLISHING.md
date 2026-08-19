@@ -65,6 +65,8 @@ pnpm publish --access public
    npm publish --access public
    ```
 
+   Provenance с ноутбука не генерируется (`provider: null`). В CI его делает Trusted Publishing.
+
 3. На странице пакета: **Settings → Trusted Publisher → GitHub Actions**:
    - Organization or user: `Supportly-Tech`
    - Repository: `supportly-sdk`
