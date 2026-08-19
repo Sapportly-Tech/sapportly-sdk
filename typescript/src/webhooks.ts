@@ -78,9 +78,13 @@ async function getSubtle(): Promise<SubtleCrypto> {
   const fromGlobal = globalThis.crypto?.subtle;
   if (fromGlobal) return fromGlobal;
 
+  const fromRequire = nodeSubtleFromRequire();
+  if (fromRequire) return fromRequire;
+
   try {
-    const { webcrypto } = await import("node:crypto");
-    // Node's SubtleCrypto type and DOM's are not identical under @types/node 22.
+    // Не `import("node:crypto")`: library tsconfig с `types: []`, иначе tsc --emitDeclarationOnly падает.
+    const load = new Function("s", "return import(s)") as (s: string) => Promise<{ webcrypto?: Crypto }>;
+    const { webcrypto } = await load("node:crypto");
     const nodeSubtle = webcrypto?.subtle as unknown as SubtleCrypto | undefined;
     if (nodeSubtle) return nodeSubtle;
   } catch {
@@ -90,6 +94,18 @@ async function getSubtle(): Promise<SubtleCrypto> {
   throw new Error(
     "Web Crypto is unavailable — webhook verification needs `crypto.subtle` (Node 18+: node:crypto.webcrypto; browsers, Deno, Bun)",
   );
+}
+
+function nodeSubtleFromRequire(): SubtleCrypto | undefined {
+  try {
+    const req = new Function(
+      "return typeof require === 'function' ? require : undefined",
+    )() as ((id: string) => { webcrypto?: Crypto }) | undefined;
+    const subtle = req?.("node:crypto")?.webcrypto?.subtle ?? req?.("crypto")?.webcrypto?.subtle;
+    return subtle as unknown as SubtleCrypto | undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

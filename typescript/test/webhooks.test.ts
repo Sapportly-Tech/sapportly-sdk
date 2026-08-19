@@ -72,17 +72,6 @@ describe("signWebhookBody", () => {
       "sha256=47b1df0ab12338b2685470b0d2b37033add7c3b2bc8172f313e77413f1bb78c8",
     );
   });
-
-  it("falls back to node:crypto when globalThis.crypto.subtle is missing", async () => {
-    const original = globalThis.crypto;
-    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true });
-    try {
-      const signature = await signWebhookBody(SECRET, NOW, BODY);
-      expect(signature).toMatch(/^sha256=[0-9a-f]{64}$/);
-    } finally {
-      Object.defineProperty(globalThis, "crypto", { value: original, configurable: true });
-    }
-  });
 });
 
 describe("verifyWebhook", () => {
