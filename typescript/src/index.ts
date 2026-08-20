@@ -1,5 +1,8 @@
 /**
- * `@supportly/sdk` — официальный клиент публичного API Supportly.
+ * `@sapportly/sdk` — Sapportly TypeScript SDK, официальный клиент публичного API Supportly.
+ *
+ * Пакет на npm — `@sapportly/sdk`, не `@supportly/sdk`: scope `supportly` для этого SDK
+ * недоступен. Продукт, API (`api.supportly.cc`) и классы (`SupportlyClient`) — Supportly.
  *
  * Runtime-agnostic: нужен только глобальный `fetch`
  * (Node 18+, Bun, Deno, Cloudflare Workers, браузеры). Без runtime-зависимостей.
@@ -7,7 +10,7 @@
  * Верификацию webhook можно импортировать отдельно, без HTTP-клиента:
  *
  * ```ts
- * import { verifyWebhook } from "@supportly/sdk/webhooks";
+ * import { verifyWebhook } from "@sapportly/sdk/webhooks";
  * ```
  */
 
@@ -54,14 +57,24 @@ export {
 export { generateIdempotencyKey } from "./idempotency";
 
 export {
+  bindThreadKey,
   channelIdentifier,
   channelKey,
   channelNamespace,
+  composeThreadChannel,
+  conversationMatchesSource,
+  deriveThreadId,
+  isThreadChannel,
   isWidgetVisitorChannel,
+  parseConversationKey,
+  sourceChannel,
+  threadIdFromChannel,
   visitorIdFromWidgetChannel,
   widgetChannel,
+  THREAD_ID_NAMESPACE,
   WIDGET_REGISTRY_CHANNEL,
   WIDGET_REGISTRY_SLUG,
+  type ParsedConversationKey,
 } from "./channels";
 
 export { extractMessageId, MessageDeduper, type MessageDeduperOptions } from "./dedup";

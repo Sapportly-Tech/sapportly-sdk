@@ -1,10 +1,14 @@
-# @supportly/sdk
+# @sapportly/sdk
 
-[![npm](https://img.shields.io/npm/v/@supportly/sdk.svg)](https://www.npmjs.com/package/@supportly/sdk)
+[![npm](https://img.shields.io/npm/v/@sapportly/sdk.svg)](https://www.npmjs.com/package/@sapportly/sdk)
 [![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/@supportly/sdk.svg)](LICENSE)
+[![license](https://img.shields.io/npm/l/@sapportly/sdk.svg)](LICENSE)
 
-Official TypeScript client for the [Supportly](https://supportly.cc) public API.
+**This is the Sapportly TypeScript SDK** — the official client for the [Supportly](https://supportly.cc) public API.
+
+Install **`@sapportly/sdk`**. There is no `@supportly/sdk` on npm.
+
+The product, API host (`api.supportly.cc`), and classes (`SupportlyClient`, `SupportlyInbox`, …) remain **Supportly**. The npm scope and organization name `supportly` are not available for this SDK, so the package is published under the **sapportly** org. Do not confuse this with `@supportly/widget-sdk` (browser widget) or `@supportly/api` (internal monorepo package).
 
 Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-Tech/supportly-sdk) · Docs: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript)
 
@@ -14,7 +18,7 @@ Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-T
 - **Webhook verification built in** — timestamped HMAC, constant-time compare.
 
 ```bash
-npm install @supportly/sdk
+npm install @sapportly/sdk
 ```
 
 ## Zero to first message
@@ -23,7 +27,7 @@ Create an API key in the dashboard (Settings → API keys) with the
 `messages:write` scope. Keys are shown once.
 
 ```ts
-import { SupportlyClient } from "@supportly/sdk";
+import { SupportlyClient } from "@sapportly/sdk";
 
 const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
 
@@ -46,33 +50,42 @@ nothing new was created.
 
 ## Каналы
 
-Канал — **источник** (сайт, CRM, коннектор), не тред с одним человеком.
-Все обращения источника идут через один ключ. Аналитика режется по каналам.
-Внешний id посетителя храните у себя и кладите в `identity.external_id` /
-`idempotency_key`.
+Реестр и аналитика — **источник** `namespace:slug` (`custom:shop`).
+Диалог в панели и история ИИ — **тред** `namespace:slug:{uuid}`.
+
+Не создавайте канал на человека. Передайте `identity.external_id` (или `thread_id`):
+шлюз соберёт стабильный UUID v5. Без identity остаётся общая лента источника (legacy).
 
 ```ts
-await client.ingest.send({
+const accepted = await client.ingest.send({
   channel: "custom:shop",
   body: text,
   idempotency_key: `shop:${orderId}:${commentId}`,
   identity: { email, external_id: orderId },
 });
+// accepted.channel === "custom:shop:{uuid}" — этот ключ для reply и истории
+
+inbox.onAgent(async (msg) => {
+  if (msg.echo) return;
+  await deliverToCustomer(msg.externalId, msg.body); // человек
+  // панель уже записала исходящее в msg.channel
+});
+
+await client.conversations.reply(accepted.channel!, { body: reply });
 ```
 
-Виджет — исключение: в панели нужен тред 1:1, поэтому посетитель живёт в
-`widget:{visitor_uuid}`. Реестр виджета один: `widget:web`.
+Виджет — исключение: тред `widget:{visitor_uuid}`, реестр `widget:web`.
 
 ## Realtime inbox (bots / custom admin)
 
 ```ts
-import { SupportlyInbox } from "@supportly/sdk/realtime";
+import { SupportlyInbox } from "@sapportly/sdk/realtime";
 
 const inbox = new SupportlyInbox(client, { channels: ["custom:shop"] });
 inbox.onVisitor((m) => console.log("user", m.body));
 inbox.onAgent((m) => {
   if (m.echo) return; // свой reply — в CRM уже отправили
-  console.log("agent", m.body);
+  console.log("agent", m.channel, m.externalId, m.body);
 });
 inbox.onAi((d) => console.log("ai", d.draft_body));
 await inbox.connect();
@@ -93,7 +106,7 @@ must compare in constant time and reject anything older than 300 seconds, or a
 captured request stays replayable forever.
 
 ```ts
-import { verifyWebhook } from "@supportly/sdk/webhooks";
+import { verifyWebhook } from "@sapportly/sdk/webhooks";
 
 app.post("/hooks/supportly", express.raw({ type: "application/json" }), async (req, res) => {
   try {
@@ -116,7 +129,7 @@ match. On frameworks with a `Request` object there is a one-liner that reads
 the body correctly for you:
 
 ```ts
-import { verifyWebhookRequest } from "@supportly/sdk/webhooks";
+import { verifyWebhookRequest } from "@sapportly/sdk/webhooks";
 
 export async function POST(request: Request) {
   const event = await verifyWebhookRequest(process.env.SUPPORTLY_WEBHOOK_SECRET!, request);
@@ -140,7 +153,7 @@ import {
   SupportlyPermissionError,
   SupportlyValidationError,
   SupportlyError,
-} from "@supportly/sdk";
+} from "@sapportly/sdk";
 
 try {
   await client.ingest.send({ channel: "custom:shop", body: "hi" });
@@ -208,7 +221,7 @@ for await (const page of client.conversations.iterateMessagePages("widget:abc", 
 }
 
 // Bounded
-import { collect } from "@supportly/sdk";
+import { collect } from "@sapportly/sdk";
 const recent = await collect(client.conversations.iterate({ maxItems: 500 }));
 ```
 
@@ -218,7 +231,7 @@ Tickets are single-use and expire in about a minute, so the socket wrapper
 mints a fresh one on every connect and reconnect.
 
 ```ts
-import { SupportlyRealtime } from "@supportly/sdk/realtime";
+import { SupportlyRealtime } from "@sapportly/sdk/realtime";
 
 const stream = new SupportlyRealtime({
   tickets: client.realtime,
@@ -234,7 +247,7 @@ If you consume both webhooks and the WebSocket, deduplicate on `message_id` —
 it is the only identifier stable across channels:
 
 ```ts
-import { MessageDeduper, extractMessageId } from "@supportly/sdk";
+import { MessageDeduper, extractMessageId } from "@sapportly/sdk";
 
 const deduper = new MessageDeduper();
 const id = extractMessageId(frame);
@@ -315,7 +328,7 @@ SupportlyClient(options)
 
 ## Widget vs. this SDK
 
-`@supportly/sdk` is a server-side client. To put a chat widget on a website use
+`@sapportly/sdk` is a server-side client. To put a chat widget on a website use
 [`@supportly/widget-sdk`](https://www.npmjs.com/package/@supportly/widget-sdk),
 which authenticates with a public Site ID.
 
@@ -331,7 +344,7 @@ mint a visitor session without exposing the API key to the browser.
 
 ## Out of scope: panel / dashboard API
 
-`@supportly/sdk` covers **only** the public mass API on `api.supportly.cc`
+`@sapportly/sdk` covers **only** the public mass API on `api.supportly.cc`
 (ingest, conversations, channels, widget embed, webhooks, attachments, WS
 tickets). It does **not** include:
 
@@ -361,12 +374,12 @@ pnpm build
 In the Supportly monorepo the same package is `sdks/typescript`:
 
 ```bash
-pnpm --filter @supportly/sdk test
-pnpm --filter @supportly/sdk typecheck
-pnpm --filter @supportly/sdk build
+pnpm --filter @sapportly/sdk test
+pnpm --filter @sapportly/sdk typecheck
+pnpm --filter @sapportly/sdk build
 ```
 
-Releases are semver tags (`v1.2.1`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
+Releases are semver tags (`v1.3.0`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
 
 ## License
 

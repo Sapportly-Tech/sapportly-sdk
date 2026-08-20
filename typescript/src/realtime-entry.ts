@@ -1,5 +1,5 @@
 /**
- * `@supportly/sdk/realtime` — сокет интегратора.
+ * `@sapportly/sdk/realtime` — сокет интегратора.
  *
  * Отдельный entry: процесс, который только делает ingest, не тащит WebSocket.
  * Node 18/20 без глобального `WebSocket` передают свою фабрику.
@@ -15,9 +15,17 @@ export {
   type WebSocketLike,
 } from "./realtime";
 
-export { websocketUrl } from "./resources/realtime";
+export {
+  websocketUrl,
+} from "./resources/realtime";
 export { extractMessageId, MessageDeduper } from "./dedup";
 export { SupportlyInbox, type InboxMessage, type InboxOptions } from "./inbox";
+export {
+  bindThreadKey,
+  conversationMatchesSource,
+  sourceChannel,
+  threadIdFromChannel,
+} from "./channels";
 export {
   classifyWireEvent,
   isAgentReply,

@@ -6,7 +6,7 @@ import type { WebhookConfig, WebhookConfigUpdate, WebhookTestResult } from "../t
  *
  * Reads need `conversations:read` (or `conversations:write`); mutations need
  * `conversations:write`. Signature verification stays in
- * `@supportly/sdk/webhooks` and does not need this resource.
+ * `@sapportly/sdk/webhooks` and does not need this resource.
  */
 export class WebhooksResource {
   constructor(private readonly transport: Transport) {}

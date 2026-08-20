@@ -5,4 +5,4 @@ contact_links:
     about: Report security vulnerabilities privately (do not open public issues)
   - name: Product docs
     url: https://docs.supportly.cc/docs/sdk/typescript
-    about: Client documentation for @supportly/sdk
+    about: Client documentation for @sapportly/sdk

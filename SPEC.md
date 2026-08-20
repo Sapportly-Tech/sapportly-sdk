@@ -5,9 +5,13 @@
 **OpenAPI:** [docs.supportly.cc/openapi.json](https://docs.supportly.cc/openapi.json)
 
 This document is the **canonical behavioural contract** for any client of the
-public API — the maintained TypeScript SDK, a generated client, or a
-hand-written one. The OpenAPI spec defines the wire format; this document
-defines what a correct client does with it.
+public API — the maintained Sapportly TypeScript SDK (`@sapportly/sdk`), a
+generated client, or a hand-written one. The OpenAPI spec defines the wire
+format; this document defines what a correct client does with it.
+
+**Package name:** `@sapportly/sdk` (npm org **sapportly**). There is no
+`@supportly/sdk` — that scope is unavailable for this SDK. The product and API
+remain Supportly.
 
 **Reference implementation:** [`typescript/src`](typescript/src). The eight
 other SDKs were archived in v2.0.0 — see [`README.md`](README.md).
@@ -38,7 +42,7 @@ other SDKs were archived in v2.0.0 — see [`README.md`](README.md).
 ### Out of scope (public SDK)
 
 - **Panel-only routes** (`/v1/auth/*`, panel JWT conversations on BFF, `/v1/api-keys`, billing, …) — via `app.supportly.cc` with `X-Slc`, not `api.supportly.cc`.
-- **Panel JWT helpers.** `GET /v1/inbox/unread` and `POST /v1/conversations/{channel}/read` are mounted on the public router but authenticate with a panel session, not an API key. A public SDK MUST NOT expose them; per-agent unread state is meaningless for an API key. (`@supportly/sdk` dropped `client.dashboard.*` in 1.0.0 for this reason.)
+- **Panel JWT helpers.** `GET /v1/inbox/unread` and `POST /v1/conversations/{channel}/read` are mounted on the public router but authenticate with a panel session, not an API key. A public SDK MUST NOT expose them; per-agent unread state is meaningless for an API key. (`@sapportly/sdk` dropped `client.dashboard.*` in 1.0.0 for this reason.)
 
 ---
 
@@ -128,7 +132,7 @@ SupportlyClient(baseUrl, apiKey)
     └── sign(secret, timestamp, rawBody)  → "sha256={hex}"   (tests/simulators)
 ```
 
-Integrator inbox (separate entry `@supportly/sdk/realtime`): `SupportlyInbox` — tickets, reconnect, `onVisitor` / `onAgent` / `onAi`, `reply`.
+Integrator inbox (separate entry `@sapportly/sdk/realtime`): `SupportlyInbox` — tickets, reconnect, `onVisitor` / `onAgent` / `onAi`, `reply`.
 
 Webhook verification MUST be importable without the HTTP client, so a webhook
 route pulls in only the crypto path.
@@ -215,7 +219,7 @@ Write endpoints accept an optional `idempotency_key` (1–128 chars).
 
 | Who | What happens |
 |-----|----------------|
-| `@supportly/sdk` | Always mints a UUID per call if you omit the field. HTTP retries reuse that key. Also sends `Idempotency-Key` header with the same value. |
+| `@sapportly/sdk` | Always mints a UUID per call if you omit the field. HTTP retries reuse that key. Also sends `Idempotency-Key` header with the same value. |
 | Gateway | Body `idempotency_key` wins; else header `Idempotency-Key`; else mints a UUID. A raw curl retry without a key creates a **new** message. |
 | You, optionally | Pass a stable key to dedupe a retried external event: `shop:{order_id}:{comment_id}`. |
 
@@ -239,7 +243,7 @@ format is still a **bare JSON array** (compat). Opt in to an envelope with
 { "data": [ … ], "has_more": true, "next_cursor": { "before_at": "…", "before_channel": "…" } }
 ```
 
-`@supportly/sdk` always sends the envelope header and unwraps `data`, so
+`@sapportly/sdk` always sends the envelope header and unwraps `data`, so
 callers still iterate over items. The next page is requested by echoing fields
 from the edge item of the page you already hold.
 
@@ -263,24 +267,35 @@ Rules:
 
 ## 6. Ingest channels
 
-A channel is a **source** for analytics (site, CRM, custom connector) — not a
-thread with one person. Register one channel per source (`custom:shop`,
-`email:support`). Do **not** mint a channel per visitor; keep the external id
-in your process and put it in `identity.external_id` / `idempotency_key`.
+A **source** is a registry/analytics key (`custom:shop`, `email:support`). One
+source per connector. Do **not** mint a channel per visitor.
 
-Format: `namespace:identifier` (validated server-side), or register a channel
-and use `channel_slug` + optional `channel_namespace` on ingest.
+A **thread** is the 1:1 tape in the panel and for AI: `namespace:slug:{uuid}`
+(widget stays `widget:{uuid}`, registry `widget:web`).
+
+On ingest, pass `identity.external_id` or `thread_id`. The gateway binds a
+stable UUID v5 (`THREAD_ID_NAMESPACE` = `a1f0c3e8-7b2d-4e91-9c54-6d8e0b1a2c3d`,
+name = `"{source}\0{external_id}"`). The accept body returns `channel` (tape),
+`source_channel`, `thread_id`. Without either field, ingest writes the shared
+source tape (legacy).
+
+Format: `namespace:identifier`, or `namespace:identifier:{uuid}`, or register a
+channel and use `channel_slug` + optional `channel_namespace`.
 
 | Namespace | Identifier | Example | Notes |
 |-----------|------------|---------|-------|
-| `custom` | slug | `custom:telegram` | One pipe for the whole bot / CRM |
+| `custom` | slug | `custom:telegram` | Source for the whole bot / CRM; people are threads |
 | `api` | slug | `api:crm` | Same idea |
 | `telegram`, `email`, `slack`, `discord` | slug | `telegram:shop` | Namespace of the source, not a chat id |
 | `widget` | UUID | `widget:{visitor_uuid}` | **Exception:** 1:1 operator threads. Registry row is `widget:web` |
 
-**Invalid:** bare `widget` without UUID. For visitor chat use **Widget API**
-(`POST /v1/widget/messages`) — channel `widget:{visitor_id}` is created by the
-server.
+**Invalid:** bare `widget` without UUID; `widget:web:{uuid}` (three-part widget).
+For visitor chat use **Widget API** (`POST /v1/widget/messages`).
+
+Reply (`POST /v1/conversations/{channel}/messages`) addresses the **thread**
+key. Integrator `onAgent` / `agent.reply` includes `external_id` so you can
+deliver to the person. Panel replies on custom channels do not fan out to the
+visitor themselves.
 
 ---
 
@@ -298,7 +313,9 @@ See OpenAPI `components.schemas`. Core types:
   "body": "Hello",
   "idempotency_key": "uuid",
   "attachment_ids": [],
-  "content_encoding": "plain"
+  "content_encoding": "plain",
+  "thread_id": "uuid",
+  "identity": { "external_id": "crm-42" }
 }
 ```
 
@@ -312,7 +329,10 @@ Provide either `channel` or (`channel_slug` + optional `channel_namespace`). Whe
   "message_id": "uuid",
   "event_id": "uuid",
   "correlation_id": "uuid",
-  "duplicate": false
+  "duplicate": false,
+  "channel": "custom:orders:{uuid}",
+  "source_channel": "custom:orders",
+  "thread_id": "uuid"
 }
 ```
 
@@ -469,7 +489,7 @@ A client MUST accept an injectable constructor (`ws` package or
 
 ### 9.5 Reference helper
 
-`SupportlyInbox` (`@supportly/sdk/realtime`) mints tickets, reconnects on
+`SupportlyInbox` (`@sapportly/sdk/realtime`) mints tickets, reconnects on
 4401, classifies frames, marks `inbox.reply` echoes, and skips `ai.draft` in
 the dual-delivery deduper. Integrators SHOULD use it instead of raw tickets.
 
@@ -494,7 +514,7 @@ Webhooks never carry `ai.draft`. Drafts are WebSocket-only.
 ### Example (TypeScript)
 
 ```typescript
-import { SupportlyInbox } from "@supportly/sdk/realtime";
+import { SupportlyInbox } from "@sapportly/sdk/realtime";
 
 const inbox = new SupportlyInbox(client, { channels: ["custom:shop"] });
 inbox.onVisitor((m) => handleInbound(m));
@@ -522,7 +542,7 @@ Do **not** implement in new SDKs:
 
 | Language | Package | Registry | Status |
 |----------|---------|----------|--------|
-| TypeScript | `@supportly/sdk` | npm | Maintained |
+| TypeScript | `@sapportly/sdk` | npm | Maintained |
 | Anything else | — | — | Generate from OpenAPI |
 
 Generation instructions are in [`README.md`](README.md). The previously

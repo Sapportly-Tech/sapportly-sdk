@@ -34,7 +34,8 @@ const DEFAULT_MESSAGE_LIMIT = 100;
  * Чтение — `conversations:read`, ответ — `conversations:write`,
  * назначение — `conversations:assign`.
  *
- * `{channel}` в URL — ключ источника (`custom:shop`), тот же что в ingest.
+ * `{channel}` в URL — ключ ленты: источник `custom:shop` или тред
+ * `custom:shop:{uuid}`. Reply адресует этот ключ, не «отправь user id».
  * Не путать с ingest: туда кладут входящее от клиента, сюда — исходящее агента.
  */
 export class ConversationsResource {

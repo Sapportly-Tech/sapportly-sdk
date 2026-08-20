@@ -18,6 +18,10 @@ export interface MessageDeliveredPayload {
   content_encoding?: string;
   attachments?: unknown[];
   channel_sequence?: number | null;
+  source_channel?: string;
+  thread_id?: string;
+  external_id?: string;
+  user_id?: string;
 }
 
 /** Streaming / final AI draft. Partial frames have `partial: true`. */

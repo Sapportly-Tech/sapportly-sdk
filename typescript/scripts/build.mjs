@@ -39,4 +39,4 @@ for (const [name, entry] of Object.entries(entries)) {
 
 execSync("tsc --emitDeclarationOnly", { cwd: root, stdio: "inherit" });
 
-console.log("Built @supportly/sdk");
+console.log("Built @sapportly/sdk");

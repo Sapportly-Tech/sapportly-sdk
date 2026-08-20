@@ -1,7 +1,7 @@
 {
-  "name": "@supportly/sdk",
-  "version": "1.2.1",
-  "description": "Official TypeScript SDK for the Supportly public API — messages, conversations, channels, attachments, webhooks and realtime",
+  "name": "@sapportly/sdk",
+  "version": "1.3.0",
+  "description": "Sapportly TypeScript SDK (@sapportly/sdk) — official client for the Supportly public API. Not @supportly/sdk: that npm name is unavailable.",
   "license": "MIT",
   "author": "Supportly <ac@supportly.cc>",
   "repository": {
@@ -12,9 +12,11 @@
   "homepage": "https://docs.supportly.cc/docs/sdk/typescript",
   "bugs": "https://github.com/Supportly-Tech/supportly-sdk/issues",
   "keywords": [
+    "sapportly",
     "supportly",
     "api",
     "sdk",
+    "typescript",
     "customer-support",
     "chat",
     "webhook",

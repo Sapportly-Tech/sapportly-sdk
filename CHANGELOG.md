@@ -2,6 +2,9 @@
 
 Canonical contract: [`SPEC.md`](./SPEC.md).
 
+Публичный клиент на npm — **Sapportly TypeScript SDK** `@sapportly/sdk` (org **sapportly**).
+Пакета `@supportly/sdk` нет: это имя на npm недоступно.
+
 ## 2.0.0 — 2026-07-30
 
 ### TypeScript is the only SDK
@@ -15,7 +18,7 @@ Canonical contract: [`SPEC.md`](./SPEC.md).
   `packages/api/openapi.json` and implements the four behaviours a generator
   cannot infer — webhook verification, idempotency, retry policy, keyset
   pagination. See [`README.md`](./README.md).
-- `@supportly/sdk` 1.0.0 rebuilt to reference quality: timestamped webhook
+- `@sapportly/sdk` 1.0.0 rebuilt to reference quality: timestamped webhook
   verification, automatic idempotency keys, retries with backoff and jitter, a
   typed error hierarchy, and pagination iterators. Panel/dashboard endpoints
   removed from the public surface. See
@@ -68,7 +71,7 @@ _None — TypeScript v0.2.0 ships attachments, conversations, and realtime (MSG-
 
 - `client.conversations.list/messages/reply` with API key auth.
 - `client.attachments.upload()` — full presigned upload flow.
-- `client.realtime.issueTicket()` + `SupportlyRealtime.connect()` (`@supportly/sdk/realtime`).
+- `client.realtime.issueTicket()` + `SupportlyRealtime.connect()` (`@sapportly/sdk/realtime`).
 - `MessageDeduper`, `extractMessageId`, `websocketTicketUrl` (ADR-003).
 
 ## 1.1.0 — 2026-07-14

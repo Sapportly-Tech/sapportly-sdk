@@ -10,7 +10,7 @@
  * Importable on its own so a webhook route pulls in no HTTP client:
  *
  * ```ts
- * import { verifyWebhook } from "@supportly/sdk/webhooks";
+ * import { verifyWebhook } from "@sapportly/sdk/webhooks";
  * ```
  */
 

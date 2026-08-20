@@ -1,11 +1,13 @@
 name: Publish
 
-# Публикует @supportly/sdk по semver-тегу через npm Trusted Publishing (OIDC).
+# Публикует @sapportly/sdk (Sapportly TypeScript SDK, npm org sapportly — не supportly)
+# по semver-тегу через npm Trusted Publishing (OIDC).
 # Тег: v1.2.3 — обязан совпадать с typescript/package.json.
 # npmjs.com → пакет → Trusted Publisher:
 #   GitHub org/user: Supportly-Tech
 #   Repository: supportly-sdk
 #   Workflow filename: publish.yml
+# npm org: sapportly (пакет @sapportly/sdk; scope supportly для этого SDK недоступен)
 on:
   push:
     tags:

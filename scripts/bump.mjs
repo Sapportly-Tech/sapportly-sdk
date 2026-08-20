@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Bump `@supportly/sdk` semver, sync `src/version.ts`, stub CHANGELOG.
+ * Bump `@sapportly/sdk` semver, sync `src/version.ts`, stub CHANGELOG.
  *
  * Usage (from sdks/):
  *   node scripts/bump.mjs patch|minor|major
@@ -36,7 +36,7 @@ writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
 writeFileSync(
   join(root, "typescript/src/version.ts"),
-  `/** Semver пакета \`@supportly/sdk\`. Меняется скриптом \`scripts/bump.mjs\`. */\nexport const VERSION = "${next}";\n`,
+  `/** Semver пакета \`@sapportly/sdk\`. Меняется скриптом \`scripts/bump.mjs\`. */\nexport const VERSION = "${next}";\n`,
 );
 
 const changelogPath = join(root, "typescript/CHANGELOG.md");
@@ -52,7 +52,7 @@ if (!changelog.includes(heading)) {
   writeFileSync(changelogPath, changelog);
 }
 
-console.log(`Bumped @supportly/sdk to ${next}`);
+console.log(`Bumped @sapportly/sdk to ${next}`);
 console.log("");
 console.log("Next:");
 console.log(`  1. Fill in typescript/CHANGELOG.md for ${next}`);

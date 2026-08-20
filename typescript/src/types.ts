@@ -101,10 +101,16 @@ export type CreatableChannelNamespace = (typeof CREATABLE_CHANNEL_NAMESPACES)[nu
 
 export interface IngestMessageRequest {
   /**
-   * Ключ источника `namespace:slug` (`custom:shop`, `widget:{uuid}`).
-   * Не внешний id посетителя и не «канал на каждого пользователя».
+   * Ключ источника `namespace:slug` (`custom:shop`) или уже тред
+   * `namespace:slug:{uuid}`. Не «канал на каждого пользователя».
+   * С `identity.external_id` / `thread_id` SDK соберёт тред сам.
    */
   channel?: string;
+  /**
+   * Явный UUID треда. Если нет — стабильный UUID v5 из источника +
+   * `identity.external_id`. Без обоих остаётся общая лента источника (legacy).
+   */
+  thread_id?: string;
   /** Slug из реестра — вместо `channel`. */
   channel_slug?: string;
   /** Namespace для `channel_slug`. На сервере по умолчанию `custom`. */
@@ -146,6 +152,10 @@ export interface MessageAccepted {
    * (HTTP 200). A fresh accept (HTTP 202) is asynchronous and returns `null`.
    */
   message_id: string | null;
+  /** Ключ ленты после привязки треда (`custom:shop:{uuid}`). */
+  channel?: string | null;
+  source_channel?: string | null;
+  thread_id?: string | null;
 }
 
 /** A stored message, as returned by conversation and widget history. */
@@ -188,6 +198,11 @@ export interface ConversationSummary {
   assignee_role_color?: string;
   /** Inbox state derived from assignment. Default `open`. */
   status?: "open" | "resolved" | "transferred" | (string & {});
+  /** Источник для аналитики/реестра (`custom:shop`). У треда отличается от `channel`. */
+  source_channel?: string | null;
+  thread_id?: string | null;
+  /** Внешний id посетителя, если клали в ingest `identity.external_id`. */
+  external_id?: string | null;
 }
 
 export interface ListConversationsParams {

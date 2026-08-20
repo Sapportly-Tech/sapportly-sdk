@@ -1,6 +1,8 @@
 # Как участвовать
 
-Репозиторий публичного `@supportly/sdk`. Пакет npm — каталог `typescript/`.
+Репозиторий **Sapportly TypeScript SDK** (`@sapportly/sdk`). Пакет npm — каталог `typescript/`.
+
+Имя `@supportly/sdk` на npm **не используется**: scope `supportly` для этого SDK недоступен. Продукт — Supportly; npm-org — **sapportly**.
 
 ## Граница продукта
 
@@ -23,9 +25,9 @@ pnpm build
 Semver в `typescript/package.json`. Из корня репозитория:
 
 ```bash
-pnpm release:patch   # 1.2.1 → 1.2.2
-pnpm release:minor   # 1.2.1 → 1.3.0
-pnpm release:major   # 1.2.1 → 2.0.0
+pnpm release:patch   # 1.3.0 → 1.3.1
+pnpm release:minor   # 1.3.0 → 1.4.0
+pnpm release:major   # 1.3.0 → 2.0.0
 ```
 
 Допишите `typescript/CHANGELOG.md`, затем коммит + тег `vX.Y.Z` и `git push --tags`. Тег запускает публикацию на npm. Подробности — [`PUBLISHING.md`](PUBLISHING.md).

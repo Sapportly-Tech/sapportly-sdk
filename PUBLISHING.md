@@ -1,10 +1,12 @@
-# Публикация `@supportly/sdk`
+# Публикация `@sapportly/sdk`
+
+Это **Sapportly TypeScript SDK**. Пакет на npm — **`@sapportly/sdk`**, не `@supportly/sdk`: scope и организация `supportly` для этого SDK на npm недоступны. Org npm — **`sapportly`**. Продукт и API при этом Supportly.
 
 Канонический публичный репозиторий: **https://github.com/Supportly-Tech/supportly-sdk**
 
 В монорепо Supportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу `vX.Y.Z`.
 
-Пакет на npm ещё не публиковался — первая публикация создаёт `@supportly/sdk`.
+Пакет на npm ещё не публиковался — первая публикация создаёт `@sapportly/sdk`.
 
 ## Semver
 
@@ -13,8 +15,11 @@
 | Изменение | Bump |
 |-----------|------|
 | Ломающий публичный API | `major` (2.0.0) |
-| Новый метод / совместимое поле | `minor` (1.3.0) |
-| Багфикс, типы, доки | `patch` (1.2.2) |
+| Новый метод / совместимое поле | `minor` (1.4.0) |
+| Багфикс, типы, доки | `patch` (1.3.1) |
+
+Треды `custom:shop:{uuid}` и `identity.external_id` — **1.3.0** (minor): новые поля,
+legacy-ingest без identity не ломается.
 
 ## Релиз
 
@@ -29,13 +34,13 @@
 
    ```bash
    git add -A
-   git commit -m "release: v1.2.2"
-   git tag v1.2.2
+   git commit -m "release: v1.3.1"
+   git tag v1.3.1
    git push origin main --tags
    ```
 
 4. Тег запускает [`.github/workflows/publish.yml`](.github/workflows/publish.yml): typecheck → test → build → `npm publish` через **OIDC** (без `NPM_TOKEN`).
-5. Проверьте [npm](https://www.npmjs.com/package/@supportly/sdk) и GitHub Release.
+5. Проверьте [npm](https://www.npmjs.com/package/@sapportly/sdk) и GitHub Release.
 
 Dry-run без публикации: Actions → Publish → `workflow_dispatch` с `dry_run=true`.
 
@@ -49,13 +54,13 @@ pnpm build
 pnpm publish --access public
 ```
 
-Нужен `npm login` под аккаунтом с правом писать в org **`@supportly`**.
+Нужен `npm login` под аккаунтом с правом писать в org **`sapportly`**.
 
 ## Первый раз: npm Trusted Publishing (без токена)
 
 Секрет `NPM_TOKEN` **не нужен**. CI публикует по OIDC. Обычный granular-токен с 2FA даёт `403` — так и было.
 
-1. Войти на [npmjs.com](https://www.npmjs.com/) в аккаунт с правом писать в org **`supportly`** (`@supportly/sdk`).
+1. Войти на [npmjs.com](https://www.npmjs.com/) в аккаунт с правом писать в org **`sapportly`** (`@sapportly/sdk`).
 2. Если пакета ещё нет — один раз с ноутбука (интерактивно, с 2FA):
 
    ```bash
@@ -90,7 +95,7 @@ node --input-type=module -e "import('./dist/index.js')"
 
 ## После релиза
 
-1. `npm install @supportly/sdk@<version>` ставит новую версию.
+1. `npm install @sapportly/sdk@<version>` ставит новую версию.
 2. Если изменился публичный surface — обновить `apps/docs`.
 3. Запись в `CHANGELOG.md` (пакет) и при необходимости в корневой `sdks/CHANGELOG.md`.
 

@@ -1,7 +1,7 @@
 {
   "name": "supportly-sdk-repo",
   "private": true,
-  "description": "Public Git repository for @supportly/sdk (npm package lives in typescript/)",
+  "description": "Public Git repository for the Sapportly TypeScript SDK (@sapportly/sdk; npm org sapportly, not supportly)",
   "license": "MIT",
   "packageManager": "pnpm@9.15.0",
   "scripts": {

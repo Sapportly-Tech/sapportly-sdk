@@ -27,7 +27,7 @@ export type SupportlyClientOptions = ClientOptions;
  * behind a session JWT and are intentionally absent here.
  *
  * ```ts
- * import { SupportlyClient } from "@supportly/sdk";
+ * import { SupportlyClient } from "@sapportly/sdk";
  *
  * const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
  *

@@ -3,11 +3,12 @@
  *
  * Один ticket + reconnect + обработчики. Тикеты и разбор wire сами не нужны.
  *
- * Канал в `channels` — источник (весь магазин / весь коннектор), не id посетителя.
+ * Канал в `channels` — источник (весь магазин / весь коннектор). Треды
+ * `custom:shop:{uuid}` тоже проходят фильтр `custom:shop`.
  *
  * ```ts
- * import { SupportlyClient } from "@supportly/sdk";
- * import { SupportlyInbox } from "@supportly/sdk/realtime";
+ * import { SupportlyClient } from "@sapportly/sdk";
+ * import { SupportlyInbox } from "@sapportly/sdk/realtime";
  *
  * const CHANNEL = "custom:shop";
  * const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY });
@@ -16,7 +17,7 @@
  * inbox.onVisitor((msg) => console.log("входящее в ленту", msg.body));
  * inbox.onAgent((msg) => {
  *   if (msg.echo) return; // это наш же inbox.reply — во внешний канал уже отправили
- *   // ответ из панели Supportly: доставьте человеку сами
+ *   // ответ из панели: msg.channel — тред, msg.externalId — кому доставить
  * });
  * inbox.onAi((draft) => {
  *   if (draft.partial) return; // стрим «печатает…»
@@ -26,6 +27,7 @@
  * ```
  */
 
+import { sourceChannel as registrySourceChannel, threadIdFromChannel } from "./channels";
 import type { SupportlyClient } from "./client";
 import { extractMessageId, MessageDeduper } from "./dedup";
 import { SupportlyRealtime, type RealtimeOptions, type RealtimeState } from "./realtime";
@@ -41,8 +43,14 @@ import {
 
 export interface InboxMessage {
   messageId: string;
-  /** Ключ источника, тот же что в ingest (`custom:shop`). */
+  /** Ключ ленты: тред `custom:shop:{uuid}` или источник, если identity не передали. */
   channel: string;
+  /** Источник для аналитики (`custom:shop`). */
+  sourceChannel: string;
+  /** UUID треда, если это 1:1. */
+  threadId: string | null;
+  /** `identity.external_id` с ingest — кому доставить ответ из панели. */
+  externalId: string | null;
   /**
    * Текст. На канале с tenant-шифрованием (`enc_v1_standard`) это ciphertext:
    * публичный SDK его не расшифровывает. Для ботов обычно оставляют plaintext.
@@ -60,8 +68,8 @@ export interface InboxMessage {
 
 export interface InboxOptions {
   /**
-   * Слушать только эти каналы-источники. Без списка придут все каналы тенанта.
-   * Сюда не кладут внешний id посетителя.
+   * Слушать эти источники. `custom:shop` включает треды `custom:shop:{uuid}`.
+   * Без списка придут все каналы тенанта.
    */
   channels?: string[];
   WebSocket?: RealtimeOptions["WebSocket"];
@@ -85,6 +93,9 @@ function toInboxMessage(event: ClassifiedWireEvent, echo: boolean): InboxMessage
   return {
     messageId,
     channel,
+    sourceChannel: payload?.source_channel ?? registrySourceChannel(channel),
+    threadId: payload?.thread_id ?? threadIdFromChannel(channel),
+    externalId: payload?.external_id ?? null,
     body,
     role: payload?.role ?? "visitor",
     encoding: payload?.content_encoding ?? "plain",
@@ -167,11 +178,12 @@ export class SupportlyInbox {
   }
 
   /**
-   * Записать ответ оператора / бота в ленту канала (не ingest).
+   * Записать ответ оператора / бота в ленту треда (не ingest).
    *
-   * На `custom:` / email / CRM кадр не доставляет человеку сам: сначала отдайте
-   * текст во внешний канал, затем `reply` — либо слушайте `onAgent` без `echo`
-   * для ответов из панели Supportly.
+   * Передавайте `msg.channel` — полный ключ треда, не slug источника.
+   * На `custom:` кадр не доставляет человеку сам: сначала отдайте текст
+   * во внешний канал (`msg.externalId`), затем `reply` — либо слушайте
+   * `onAgent` без `echo` для ответов из панели Supportly.
    */
   async reply(
     channel: string,

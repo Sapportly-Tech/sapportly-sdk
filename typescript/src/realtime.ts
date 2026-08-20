@@ -7,6 +7,7 @@
  * was given is already spent.
  */
 
+import { conversationMatchesSource } from "./channels";
 import { SupportlyConfigError } from "./errors";
 import type { RealtimeResource } from "./resources/realtime";
 import { websocketUrl } from "./resources/realtime";
@@ -47,8 +48,8 @@ export interface RealtimeOptions {
   /** Give up after this many consecutive failures. Default `Infinity`. */
   maxReconnectAttempts?: number;
   /**
-   * Optional channel allow-list. Frames whose payload.channel is set and not
-   * in this list are dropped (still visible via `onRaw` if you need them).
+   * Optional source allow-list. `custom:shop` совпадает с тредами
+   * `custom:shop:{uuid}`. Кадры без канала проходят. Отброшенные видны в `onRaw`.
    */
   channels?: string[];
 }
@@ -213,7 +214,11 @@ export class SupportlyRealtime {
 
     const channel =
       typeof frame.payload.channel === "string" ? frame.payload.channel : undefined;
-    if (this.options.channels?.length && channel && !this.options.channels.includes(channel)) {
+    if (
+      this.options.channels?.length &&
+      channel &&
+      !this.options.channels.some((filter) => conversationMatchesSource(channel, filter))
+    ) {
       this.options.onRaw?.(frame);
       return;
     }

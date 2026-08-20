@@ -1,7 +1,23 @@
 # Changelog
 
+## 1.3.0 — 2026-08-20
+
+- **Треды custom-каналов.** Источник остаётся `custom:shop` (реестр, аналитика).
+  Диалог 1:1 — `custom:shop:{uuid}`. Шлюз собирает UUID v5 из
+  `identity.external_id` (тот же namespace, что в Rust). Без identity — legacy,
+  одна лента на источник.
+- Хелперы: `bindThreadKey`, `deriveThreadId`, `sourceChannel`,
+  `conversationMatchesSource`, `parseConversationKey`.
+- `ingest.send` привязывает тред до POST. `MessageAccepted` отдаёт
+  `channel` / `source_channel` / `thread_id`.
+- `SupportlyInbox` / realtime: фильтр `channels: ["custom:shop"]` ловит треды.
+  `InboxMessage` несёт `sourceChannel`, `threadId`, `externalId`.
+- Reply из панели адресует тред; `onAgent` получает `externalId` для доставки
+  человеку. Пример `examples/telegram-bot.ts` без `selectedChatId`.
+
 ## 1.2.1 — 2026-08-19
 
+- **npm package name:** `@sapportly/sdk` (org **sapportly**). There is no `@supportly/sdk` — that scope is unavailable for this SDK. The product and API remain Supportly.
 - **Inbox roles:** `assistant` is treated as an agent (`onAgent`); `system` is no longer routed to `onVisitor`.
 - **Echo set** for `inbox.reply` is capped so a missing echo cannot grow unbounded.
 - Wire helpers `isAgentRole` / `isAgentReply` / `isVisitorMessage` match the dashboard mapping.
@@ -28,7 +44,7 @@
 
 ## 1.1.0 — 2026-08-14
 
-- **`SupportlyInbox`** (`@supportly/sdk/realtime`): reconnecting socket with
+- **`SupportlyInbox`** (`@sapportly/sdk/realtime`): reconnecting socket with
   `onVisitor` / `onAgent` / `onAi`, channel filter, reply helper, async
   iterator. Integrator bots no longer mint tickets by hand.
 - **Wire helpers:** `parseWireEvent`, `classifyWireEvent` — frames without
@@ -113,7 +129,7 @@ upgrade.
 - `client.attachments.upload()` — intent → presigned PUT → complete.
 - `client.realtime.issueTicket()`, `SupportlyRealtime.connect()` (`ws:connect`).
 - `MessageDeduper`, `extractMessageId()` for dual-delivery dedup.
-- Subpath export `@supportly/sdk/realtime`.
+- Subpath export `@sapportly/sdk/realtime`.
 
 ## 0.1.0 — 2026-07-14
 
