@@ -1,17 +1,20 @@
 {
   "name": "supportly-sdk-repo",
   "private": true,
-  "description": "Public Git repository for the Sapportly TypeScript SDK (@sapportly/sdk; npm org sapportly, not supportly)",
+  "description": "Public Git repository for Sapportly SDKs: @sapportly/sdk and @sapportly/widget-sdk (npm org sapportly, not supportly)",
   "license": "MIT",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "test": "pnpm --dir typescript test",
-    "typecheck": "pnpm --dir typescript typecheck",
-    "build": "pnpm --dir typescript build",
-    "pack:check": "pnpm --dir typescript pack --dry-run",
+    "test": "pnpm --dir typescript test && pnpm --dir widget test",
+    "typecheck": "pnpm --dir typescript typecheck && pnpm --dir widget typecheck",
+    "build": "pnpm --dir typescript build && pnpm --dir widget build",
+    "pack:check": "pnpm --dir typescript pack --dry-run && pnpm --dir widget pack --dry-run",
     "release:patch": "node scripts/bump.mjs patch",
     "release:minor": "node scripts/bump.mjs minor",
-    "release:major": "node scripts/bump.mjs major"
+    "release:major": "node scripts/bump.mjs major",
+    "release:widget:patch": "node scripts/bump-widget.mjs patch",
+    "release:widget:minor": "node scripts/bump-widget.mjs minor",
+    "release:widget:major": "node scripts/bump-widget.mjs major"
   },
   "engines": {
     "node": ">=18"

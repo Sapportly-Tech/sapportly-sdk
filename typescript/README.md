@@ -8,7 +8,7 @@
 
 Install **`@sapportly/sdk`**. There is no `@supportly/sdk` on npm.
 
-The product, API host (`api.supportly.cc`), and classes (`SupportlyClient`, `SupportlyInbox`, …) remain **Supportly**. The npm scope and organization name `supportly` are not available for this SDK, so the package is published under the **sapportly** org. Do not confuse this with `@supportly/widget-sdk` (browser widget) or `@supportly/api` (internal monorepo package).
+The product, API host (`api.supportly.cc`), and classes (`SupportlyClient`, `SupportlyInbox`, …) remain **Supportly**. The npm scope and organization name `supportly` are not available for this SDK, so the package is published under the **sapportly** org. Do not confuse this with [`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk) (browser widget) or `@supportly/api` (internal monorepo package).
 
 Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-Tech/supportly-sdk) · Docs: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript)
 
@@ -329,7 +329,7 @@ SupportlyClient(options)
 ## Widget vs. this SDK
 
 `@sapportly/sdk` is a server-side client. To put a chat widget on a website use
-[`@supportly/widget-sdk`](https://www.npmjs.com/package/@supportly/widget-sdk),
+[`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk),
 which authenticates with a public Site ID.
 
 `client.widget.createEmbedSession()` is the bridge: call it from your backend to

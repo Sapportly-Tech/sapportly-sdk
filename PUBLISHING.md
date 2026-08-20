@@ -1,16 +1,21 @@
-# Публикация `@sapportly/sdk`
+# Публикация Sapportly SDK
 
-Это **Sapportly TypeScript SDK**. Пакет на npm — **`@sapportly/sdk`**, не `@supportly/sdk`: scope и организация `supportly` для этого SDK на npm недоступны. Org npm — **`sapportly`**. Продукт и API при этом Supportly.
+Два пакета npm в org **sapportly**. Продукт и API при этом Supportly.
+
+| Пакет | Каталог | Тег | Workflow |
+|-------|---------|-----|----------|
+| **`@sapportly/sdk`** | `typescript/` | `vX.Y.Z` | [`publish.yml`](.github/workflows/publish.yml) |
+| **`@sapportly/widget-sdk`** | `widget/` | `widget-vX.Y.Z` | [`publish-widget.yml`](.github/workflows/publish-widget.yml) |
 
 Канонический публичный репозиторий: **https://github.com/Supportly-Tech/supportly-sdk**
 
-В монорепо Supportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу `vX.Y.Z`.
+В монорепо Supportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу.
 
-Пакет на npm ещё не публиковался — первая публикация создаёт `@sapportly/sdk`.
+Имён `@supportly/sdk` и `@supportly/widget-sdk` на npm нет: scope `supportly` для публичных SDK недоступен.
 
-## Semver
+## Semver (`@sapportly/sdk`)
 
-Версия живёт в `typescript/package.json` и `typescript/src/version.ts`. Она **не** связана с календарным `VERSION` продукта.
+Версия живёт в `typescript/package.json` и `typescript/src/version.ts`. Она **не** связана с календарным `VERSION` продукта и **не** связана с версией виджета.
 
 | Изменение | Bump |
 |-----------|------|
@@ -21,7 +26,21 @@
 Треды `custom:shop:{uuid}` и `identity.external_id` — **1.3.0** (minor): новые поля,
 legacy-ingest без identity не ломается.
 
-## Релиз
+## Semver (`@sapportly/widget-sdk`)
+
+Версия живёт в `widget/package.json`. Хеши cache-bust WASM (`WIDGET_WASM_ASSET_VERSION`) штампует сборка виджета в монорепо — их **не** bump-ит этот скрипт.
+
+| Изменение | Bump |
+|-----------|------|
+| Ломающий публичный API loader/хуков | `major` |
+| Новая обёртка / совместимое поле | `minor` |
+| Багфикс, типы, доки, актуальный WASM hash | `patch` |
+
+Первая публичная версия — **1.2.0** (тот же surface, что был внутренним `@supportly/widget-sdk`, без экспорта `./api`).
+
+Теги `v*` и `widget-v*` **нельзя** смешивать: `v1.2.0` публикует REST SDK и сверится с `typescript/package.json` (сейчас 1.3.0).
+
+## Релиз REST SDK
 
 1. Из корня этого репозитория (`sdks/`):
 
@@ -56,15 +75,48 @@ pnpm publish --access public
 
 Нужен `npm login` под аккаунтом с правом писать в org **`sapportly`**.
 
+## Релиз Widget SDK
+
+1. Из корня:
+
+   ```bash
+   pnpm release:widget:patch   # или :minor / :major
+   ```
+
+2. Допишите `widget/CHANGELOG.md`. Если сменился WASM на CDN — убедитесь, что `widget/src/constants.ts` проштампован сборкой `packages/widget/build.ps1`.
+3. Коммит, тег, пуш:
+
+   ```bash
+   git add -A
+   git commit -m "release(widget): v1.2.0"
+   git tag widget-v1.2.0
+   git push origin main --tags
+   ```
+
+4. Тег запускает [`.github/workflows/publish-widget.yml`](.github/workflows/publish-widget.yml).
+5. Проверьте [npm](https://www.npmjs.com/package/@sapportly/widget-sdk).
+
+### Вручную
+
+```bash
+cd widget
+pnpm install
+pnpm test
+pnpm build
+pnpm publish --access public
+```
+
 ## Первый раз: npm Trusted Publishing (без токена)
 
 Секрет `NPM_TOKEN` **не нужен**. CI публикует по OIDC. Обычный granular-токен с 2FA даёт `403` — так и было.
 
-1. Войти на [npmjs.com](https://www.npmjs.com/) в аккаунт с правом писать в org **`sapportly`** (`@sapportly/sdk`).
+Trusted Publisher настраивается **на каждый пакет отдельно**.
+
+1. Войти на [npmjs.com](https://www.npmjs.com/) в аккаунт с правом писать в org **`sapportly`**.
 2. Если пакета ещё нет — один раз с ноутбука (интерактивно, с 2FA):
 
    ```bash
-   cd typescript
+   cd typescript   # или widget
    pnpm build
    npm login
    npm publish --access public
@@ -75,28 +127,29 @@ pnpm publish --access public
 3. На странице пакета: **Settings → Trusted Publisher → GitHub Actions**:
    - Organization or user: `Supportly-Tech`
    - Repository: `supportly-sdk`
-   - Workflow filename: `publish.yml` (только имя файла)
+   - Workflow filename: `publish.yml` для `@sapportly/sdk`, **`publish-widget.yml`** для `@sapportly/widget-sdk` (только имя файла)
    - Allowed actions: **npm publish**
-4. Дальше релизы только тегом `vX.Y.Z`. `NPM_TOKEN` в GitHub можно удалить.
+4. Дальше релизы только тегом. `NPM_TOKEN` в GitHub можно удалить.
 
 Локальный `npm publish` без логина не используйте.
 
 ## Что попадает в tarball
 
-`files` в `typescript/package.json`: `dist/`, `README.md`, `LICENSE`, `CHANGELOG.md`. Исходники и тесты остаются на GitHub.
+`files` в `package.json`: `dist/`, `README.md`, `LICENSE`, `CHANGELOG.md`. Исходники и тесты остаются на GitHub.
 
 Проверка до релиза:
 
 ```bash
 cd typescript && pnpm build && pnpm pack --dry-run
-node -e "require('./dist/index.cjs')"
-node --input-type=module -e "import('./dist/index.js')"
+cd ../widget && pnpm build && pnpm pack --dry-run
 ```
+
+У `@sapportly/widget-sdk` в tarball **не** должно быть зависимости на `@supportly/api` и экспорта `./api`. Headless REST — `@sapportly/sdk`.
 
 ## После релиза
 
-1. `npm install @sapportly/sdk@<version>` ставит новую версию.
+1. `npm install @sapportly/sdk@<version>` / `npm install @sapportly/widget-sdk@<version>`.
 2. Если изменился публичный surface — обновить `apps/docs`.
-3. Запись в `CHANGELOG.md` (пакет) и при необходимости в корневой `sdks/CHANGELOG.md`.
+3. Запись в `CHANGELOG.md` пакета и при необходимости в корневой `sdks/CHANGELOG.md`.
 
-Метаданные лендинга/docs: `packages/config` → `SDK_PACKAGES.typescript`.
+Метаданные лендинга/docs для REST SDK: `packages/config` → `SDK_PACKAGES.typescript`.

@@ -1,33 +1,35 @@
 # Как участвовать
 
-Репозиторий **Sapportly TypeScript SDK** (`@sapportly/sdk`). Пакет npm — каталог `typescript/`.
+Репозиторий **Sapportly SDKs**: `@sapportly/sdk` (REST) и `@sapportly/widget-sdk` (embed).
 
-Имя `@supportly/sdk` на npm **не используется**: scope `supportly` для этого SDK недоступен. Продукт — Supportly; npm-org — **sapportly**.
+Имена `@supportly/sdk` / `@supportly/widget-sdk` на npm **не используются**: scope `supportly` недоступен. Продукт — Supportly; npm-org — **sapportly**.
 
 ## Граница продукта
 
-SDK — **только** public API (`api.supportly.cc`, ключ `sk_live_…`). Не добавляйте маршруты панели, admin или BFF. Контракт поведения — [`SPEC.md`](SPEC.md).
+REST SDK — **только** public API (`api.supportly.cc`, ключ `sk_live_…`). Не добавляйте маршруты панели, admin или BFF. Контракт поведения — [`SPEC.md`](SPEC.md).
+
+Widget SDK — только публичный Site ID (`wgt_…`) и загрузка embed shell. Не тащите сюда `@supportly/api` и не экспортируйте headless REST: это `@sapportly/sdk` → `client.widget`.
 
 ## Локально
 
 ```bash
-cd typescript
+cd typescript   # или widget
 pnpm install
 pnpm test
 pnpm typecheck
 pnpm build
 ```
 
-Нужен Node 18+. Live-тесты (`test/live.test.ts`) идут только если задан `SUPPORTLY_API_KEY` — в обычном CI они пропускаются.
+Нужен Node 18+. Live-тесты REST SDK (`test/live.test.ts`) идут только если задан `SUPPORTLY_API_KEY` — в обычном CI они пропускаются.
 
 ## Релиз
 
-Semver в `typescript/package.json`. Из корня репозитория:
+Semver REST: `typescript/package.json`, тег `vX.Y.Z`.
+Semver виджета: `widget/package.json`, тег `widget-vX.Y.Z`.
 
 ```bash
-pnpm release:patch   # 1.3.0 → 1.3.1
-pnpm release:minor   # 1.3.0 → 1.4.0
-pnpm release:major   # 1.3.0 → 2.0.0
+pnpm release:patch          # REST 1.3.0 → 1.3.1
+pnpm release:widget:patch   # widget 1.2.0 → 1.2.1
 ```
 
-Допишите `typescript/CHANGELOG.md`, затем коммит + тег `vX.Y.Z` и `git push --tags`. Тег запускает публикацию на npm. Подробности — [`PUBLISHING.md`](PUBLISHING.md).
+Допишите CHANGELOG пакета, затем коммит + тег и `git push --tags`. Подробности — [`PUBLISHING.md`](PUBLISHING.md).

@@ -1,0 +1,119 @@
+{
+  "name": "@sapportly/widget-sdk",
+  "version": "1.2.0",
+  "description": "Sapportly Widget SDK (@sapportly/widget-sdk) — official embed helper for the Supportly chat widget. Not @supportly/widget-sdk: that npm name is unused; org is sapportly.",
+  "license": "MIT",
+  "author": "Supportly <ac@supportly.cc>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Supportly-Tech/supportly-sdk.git",
+    "directory": "widget"
+  },
+  "homepage": "https://docs.supportly.cc/docs/guides/widget",
+  "bugs": "https://github.com/Supportly-Tech/supportly-sdk/issues",
+  "keywords": [
+    "sapportly",
+    "supportly",
+    "widget",
+    "chat",
+    "embed",
+    "react",
+    "vue",
+    "svelte",
+    "nextjs",
+    "customer-support"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.cjs"
+    },
+    "./svelte": {
+      "types": "./dist/svelte.d.ts",
+      "import": "./dist/svelte.js",
+      "require": "./dist/svelte.cjs"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js",
+      "require": "./dist/next.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && tsc --emitDeclarationOnly --watch",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "release:patch": "node ../scripts/bump-widget.mjs patch",
+    "release:minor": "node ../scripts/bump-widget.mjs minor",
+    "release:major": "node ../scripts/bump-widget.mjs major"
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": ">=17.0.0",
+    "svelte": ">=4.0.0",
+    "vue": ">=3.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "svelte": "^5.0.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.6",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^6.3.6"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

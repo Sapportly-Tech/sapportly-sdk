@@ -2,8 +2,12 @@
 
 Canonical contract: [`SPEC.md`](./SPEC.md).
 
-Публичный клиент на npm — **Sapportly TypeScript SDK** `@sapportly/sdk` (org **sapportly**).
-Пакета `@supportly/sdk` нет: это имя на npm недоступно.
+Публичный клиент на npm — **Sapportly TypeScript SDK** `@sapportly/sdk` и **Sapportly Widget SDK** `@sapportly/widget-sdk` (org **sapportly**).
+Пакетов `@supportly/sdk` / `@supportly/widget-sdk` нет: эти имена на npm недоступны.
+
+## Unreleased
+
+- **`@sapportly/widget-sdk` 1.2.0** — публичный embed SDK в `widget/` (тот же GitHub-репо). Экспорт `./api` убран; headless REST — `@sapportly/sdk`.
 
 ## 2.0.0 — 2026-07-30
 

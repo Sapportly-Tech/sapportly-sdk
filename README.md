@@ -1,19 +1,26 @@
-# Sapportly TypeScript SDK
+# Sapportly SDKs
 
 [![npm](https://img.shields.io/npm/v/@sapportly/sdk.svg)](https://www.npmjs.com/package/@sapportly/sdk)
+[![npm](https://img.shields.io/npm/v/@sapportly/widget-sdk.svg)](https://www.npmjs.com/package/@sapportly/widget-sdk)
 [![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 
-Публичный репозиторий [**`@sapportly/sdk`**](https://www.npmjs.com/package/@sapportly/sdk) — **Sapportly TypeScript SDK**, клиент [публичного REST API](https://api.supportly.cc) продукта Supportly.
+Публичный репозиторий двух пакетов npm (org **sapportly**):
 
-**Имя на npm — `@sapportly/sdk`, не `@supportly/sdk`.** Продукт, хост API (`api.supportly.cc`) и классы (`SupportlyClient`) — Supportly. Scope и организация `supportly` на npm для этого SDK недоступны, поэтому пакет живёт в org **sapportly**. Не путать с `@supportly/widget-sdk` (виджет) и `@supportly/api` (внутренний пакет монорепо).
+| Пакет | Каталог | Назначение |
+|-------|---------|------------|
+| **[`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk)** | [`typescript/`](typescript/) | REST-клиент публичного API Supportly |
+| **[`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk)** | [`widget/`](widget/) | Embed виджета (Site ID, React/Vue/Next/Svelte) |
+
+**Имена на npm — `@sapportly/sdk` и `@sapportly/widget-sdk`, не `@supportly/*`.** Продукт, хост API (`api.supportly.cc`), классы (`SupportlyClient`) и `window.Supportly` — Supportly. Scope и организация `supportly` на npm для этих SDK недоступны. `@supportly/api` — внутренний пакет монорепо, на npm не публикуется.
 
 **GitHub (клонировать в GitHub Desktop):** https://github.com/Supportly-Tech/supportly-sdk
 
 ```bash
 npm install @sapportly/sdk
+npm install @sapportly/widget-sdk
 ```
 
-Документация: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript). Исходники пакета — [`typescript/`](typescript/). С **1.3.0** custom-каналы дают треды 1:1 (`custom:shop:{uuid}`) из `identity.external_id`, источник для аналитики не плодится.
+Документация: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript), [гайд по виджету](https://docs.supportly.cc/docs/guides/widget). С **1.3.0** REST SDK custom-каналы дают треды 1:1 (`custom:shop:{uuid}`) из `identity.external_id`. Виджет по-прежнему живёт на ленте `widget:{uuid}`.
 
 **TypeScript is the single supported reference SDK.** For every other language,
 generate a client from the OpenAPI spec — see [below](#generating-a-client-for-another-language).
@@ -21,6 +28,7 @@ generate a client from the OpenAPI spec — see [below](#generating-a-client-for
 | Language | Package | Folder | Status |
 |----------|---------|--------|--------|
 | **TypeScript / JavaScript** | `@sapportly/sdk` | [`typescript/`](typescript/) | Supported |
+| **Widget embed** | `@sapportly/widget-sdk` | [`widget/`](widget/) | Supported |
 | Python, Go, Rust, C#, PHP, Kotlin, Java, Swift | — | — | Archived — generate from OpenAPI |
 
 The eight hand-written SDKs were archived in v2.0.0. A wrong client is worse
@@ -135,9 +143,9 @@ MIT. See [`LICENSE`](LICENSE).
 
 ## Русский
 
-Это **Sapportly TypeScript SDK**: на npm пакет **`@sapportly/sdk`**, не `@supportly/sdk`.
-Scope `supportly` для этого SDK недоступен; org npm — **sapportly**. Продукт и API —
-Supportly (`api.supportly.cc`, классы `SupportlyClient`).
+Это **Sapportly SDK**: на npm пакеты **`@sapportly/sdk`** (REST) и **`@sapportly/widget-sdk`** (embed), не `@supportly/*`.
+Scope `supportly` для этих SDK недоступен; org npm — **sapportly**. Продукт и API —
+Supportly (`api.supportly.cc`, классы `SupportlyClient`, Site ID `wgt_…`).
 
 TypeScript — единственный поддерживаемый SDK. Остальные восемь клиентов
 переведены в архив: удалены из рабочего дерева, история git сохранена.
