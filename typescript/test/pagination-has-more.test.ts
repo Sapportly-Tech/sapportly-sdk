@@ -199,8 +199,6 @@ describe("generateIdempotencyKey (P-10)", () => {
   });
 
   it("source has no Math.random fallback", async () => {
-    const src = await import("../src/idempotency?raw").catch(() => null);
-    // vitest may not support ?raw — read via fs
     const { readFileSync } = await import("node:fs");
     const { fileURLToPath } = await import("node:url");
     const { dirname, join } = await import("node:path");
@@ -209,6 +207,5 @@ describe("generateIdempotencyKey (P-10)", () => {
     // Comment may mention weak PRNG; code must not call Math.random(...).
     expect(text).not.toMatch(/Math\.random\s*\(/);
     expect(text).toMatch(/SapportlyConfigError/);
-    void src;
   });
 });

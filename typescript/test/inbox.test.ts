@@ -98,9 +98,9 @@ describe("SapportlyInbox", () => {
     const inbox = new SapportlyInbox(client, {
       WebSocket: (url) => new FakeSocket(url),
     });
-    inbox.onVisitor((m) => visitors.push(m.body));
-    inbox.onAgent((m) => agents.push({ body: m.body, echo: m.echo }));
-    inbox.onAi((d) => drafts.push(d.draft_body ?? ""));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
+    inbox.onAgent((m) => { agents.push({ body: m.body, echo: m.echo }); });
+    inbox.onAi((d) => { drafts.push(d.draft_body ?? ""); });
 
     const pending = inbox.connect();
     await vi.waitFor(() => expect(FakeSocket.instances.length).toBe(1));
@@ -186,9 +186,9 @@ describe("SapportlyInbox", () => {
     const inbox = new SapportlyInbox(client, {
       WebSocket: (url) => new FakeSocket(url),
     });
-    inbox.onVisitor((m) => visitors.push(m.body));
-    inbox.onAgent((m) => agents.push(m.body));
-    inbox.onEvent((e) => other.push(e.message?.role ?? e.type));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
+    inbox.onAgent((m) => { agents.push(m.body); });
+    inbox.onEvent((e) => { other.push(e.message?.role ?? e.type); });
 
     const pending = inbox.connect();
     await vi.waitFor(() => expect(FakeSocket.instances.length).toBe(1));
@@ -242,8 +242,8 @@ describe("SapportlyInbox", () => {
     const inbox = new SapportlyInbox(client, {
       WebSocket: (url) => new FakeSocket(url),
     });
-    inbox.onVisitor((m) => visitors.push(m.body));
-    inbox.onAi((d) => drafts.push(d.draft_body ?? ""));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
+    inbox.onAi((d) => { drafts.push(d.draft_body ?? ""); });
 
     const pending = inbox.connect();
     await vi.waitFor(() => expect(FakeSocket.instances.length).toBe(1));
@@ -366,7 +366,7 @@ describe("SapportlyInbox panel / filter / external store", () => {
   it("marks panel operator replies as onAgent with echo false", async () => {
     const agents: Array<{ body: string; echo: boolean; externalId: string | null }> = [];
     const { inbox, sock } = await openInbox(ticketClient());
-    inbox.onAgent((m) => agents.push({ body: m.body, echo: m.echo, externalId: m.externalId }));
+    inbox.onAgent((m) => { agents.push({ body: m.body, echo: m.echo, externalId: m.externalId }); });
 
     sock.emit(
       JSON.stringify({
@@ -391,8 +391,8 @@ describe("SapportlyInbox panel / filter / external store", () => {
   it("lets custom:shop filter pass threads and drop other sources", async () => {
     const bodies: string[] = [];
     const { inbox, sock } = await openInbox(ticketClient(), { channels: ["custom:shop"] });
-    inbox.onAgent((m) => bodies.push(m.body));
-    inbox.onVisitor((m) => bodies.push(m.body));
+    inbox.onAgent((m) => { bodies.push(m.body); });
+    inbox.onVisitor((m) => { bodies.push(m.body); });
 
     sock.emit(
       JSON.stringify({
@@ -433,7 +433,7 @@ describe("SapportlyInbox panel / filter / external store", () => {
     });
     const visitors: string[] = [];
     const { inbox, sock } = await openInbox(ticketClient(), { dedup: store });
-    inbox.onVisitor((m) => visitors.push(m.body));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
 
     const frame = JSON.stringify({
       type: "message.delivered",
@@ -463,7 +463,7 @@ describe("SapportlyInbox panel / filter / external store", () => {
     });
     const visitors: string[] = [];
     const { inbox, sock } = await openInbox(ticketClient(), { dedup: store });
-    inbox.onVisitor((m) => visitors.push(m.body));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
 
     const frame = JSON.stringify({
       type: "message.delivered",
@@ -517,7 +517,7 @@ describe("SapportlyInbox panel / filter / external store", () => {
     const { inbox, sock } = await openInbox(ticketClient(), {
       onError: (e) => errors.push(e),
     });
-    inbox.onVisitor((m) => visitors.push(m.body));
+    inbox.onVisitor((m) => { visitors.push(m.body); });
     sock.emit(
       JSON.stringify({
         type: "message.delivered",

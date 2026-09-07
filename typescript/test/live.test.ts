@@ -102,9 +102,9 @@ describeLive("live public API", () => {
       WebSocket: factory,
       onError: (error) => errors.push(error),
     });
-    inbox.onVisitor((m) => seen.push(m.body));
-    inbox.onAgent((m) => seen.push(`agent:${m.body}`));
-    inbox.onEvent((e) => seen.push(`event:${e.type}`));
+    inbox.onVisitor((m) => { seen.push(m.body); });
+    inbox.onAgent((m) => { seen.push(`agent:${m.body}`); });
+    inbox.onEvent((e) => { seen.push(`event:${e.type}`); });
 
     await inbox.connect();
     const idem = `sdk-live-ws-${randomUUID()}`;
