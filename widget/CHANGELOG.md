@@ -8,7 +8,7 @@
 - Public exports: `Sapportly*` / `getSapportly` / `loadSapportly` / `installWidget` (breaking vs npm 1.2.0 `Supportly*` names).
 - Site ID env: canon `SAPPORTLY_SITE_ID` / `NEXT_PUBLIC_SAPPORTLY_SITE_ID` / `VITE_*` / `PUBLIC_*`; legacy `SUPPORTLY_*` still accepted.
 - WASM/glue hashes synced with `packages/config`: `36da946d2c75` / `fa75b82c5535`.
-- Docs: GitHub `Sapportly-Tech/supportly-sdk`, panel `app.sapportly.pro`.
+- Docs: GitHub `Sapportly-Tech/sapportly-sdk`, panel `app.sapportly.pro`.
 - CDN shell filename remains `supportly.widget.js`; DOM events remain `supportly:*` (wire compatibility).
 
 ## 1.2.0 — 2026-08-20
@@ -18,4 +18,4 @@
 
 - Loader, сниппет, env-хелперы, обёртки React / Vue / Svelte / Next.js.
 - Экспорт `./api` убран: headless REST — `@sapportly/sdk` (`client.widget`).
-- Репозиторий: [Sapportly-Tech/supportly-sdk](https://github.com/Sapportly-Tech/supportly-sdk) (`widget/`).
+- Репозиторий: [Sapportly-Tech/sapportly-sdk](https://github.com/Sapportly-Tech/sapportly-sdk) (`widget/`).

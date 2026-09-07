@@ -6,7 +6,7 @@ name: Publish widget
 # Не путать с publish.yml (теги vX.Y.Z → @sapportly/sdk).
 # npmjs.com → пакет → Trusted Publisher:
 #   GitHub org/user: Sapportly-Tech
-#   Repository: supportly-sdk
+#   Repository: sapportly-sdk
 #   Workflow filename: publish-widget.yml
 on:
   push:

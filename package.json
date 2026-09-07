@@ -1,5 +1,5 @@
 {
-  "name": "supportly-sdk-repo",
+  "name": "sapportly-sdk-repo",
   "private": true,
   "description": "Public Git repository for Sapportly SDKs: @sapportly/sdk and @sapportly/widget-sdk (npm org sapportly, not supportly)",
   "license": "MIT",

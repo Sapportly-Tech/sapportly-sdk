@@ -7,7 +7,7 @@
 | **`@sapportly/sdk`** | `typescript/` | `vX.Y.Z` | [`publish.yml`](.github/workflows/publish.yml) |
 | **`@sapportly/widget-sdk`** | `widget/` | `widget-vX.Y.Z` | [`publish-widget.yml`](.github/workflows/publish-widget.yml) |
 
-Канонический публичный репозиторий: **https://github.com/Sapportly-Tech/supportly-sdk**
+Канонический публичный репозиторий: **https://github.com/Sapportly-Tech/sapportly-sdk**
 
 В монорепо Sapportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу.
 
@@ -157,7 +157,7 @@ Trusted Publisher настраивается **на каждый пакет от
 
 3. На странице пакета: **Settings → Trusted Publisher → GitHub Actions**:
    - Organization or user: `Sapportly-Tech`
-   - Repository: `supportly-sdk`
+   - Repository: `sapportly-sdk`
    - Workflow filename: `publish.yml` для `@sapportly/sdk`, **`publish-widget.yml`** для `@sapportly/widget-sdk` (только имя файла)
    - Allowed actions: **npm publish**
 4. Дальше релизы только тегом. `NPM_TOKEN` в GitHub можно удалить.

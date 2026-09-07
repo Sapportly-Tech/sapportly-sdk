@@ -6,7 +6,7 @@ name: Publish
 # Виджет: теги widget-vX.Y.Z и workflow publish-widget.yml — не этот файл.
 # npmjs.com → пакет → Trusted Publisher:
 #   GitHub org/user: Sapportly-Tech
-#   Repository: supportly-sdk
+#   Repository: sapportly-sdk
 #   Workflow filename: publish.yml
 # npm org: sapportly (пакет @sapportly/sdk; scope supportly для этого SDK недоступен)
 on:

@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@sapportly/sdk.svg)](https://www.npmjs.com/package/@sapportly/sdk)
 [![npm](https://img.shields.io/npm/v/@sapportly/widget-sdk.svg)](https://www.npmjs.com/package/@sapportly/widget-sdk)
-[![CI](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Sapportly-Tech/sapportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/sapportly-sdk/actions/workflows/ci.yml)
 
 Публичный репозиторий двух пакетов npm (org **sapportly**):
 
@@ -13,7 +13,7 @@
 
 **Имена на npm — `@sapportly/sdk` и `@sapportly/widget-sdk`, не `@supportly/*`.** Продукт, хост API (`api.sapportly.pro`), классы (`SapportlyClient`) и `window.Sapportly` — Sapportly. Scope и организация `supportly` на npm для этих SDK недоступны. `@sapportly/api` — внутренний пакет монорепо, на npm не публикуется.
 
-**GitHub (клонировать в GitHub Desktop):** https://github.com/Sapportly-Tech/supportly-sdk
+**GitHub (клонировать в GitHub Desktop):** https://github.com/Sapportly-Tech/sapportly-sdk
 
 ```bash
 npm install @sapportly/sdk

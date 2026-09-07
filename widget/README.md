@@ -1,7 +1,7 @@
 # @sapportly/widget-sdk
 
 [![npm](https://img.shields.io/npm/v/@sapportly/widget-sdk.svg)](https://www.npmjs.com/package/@sapportly/widget-sdk)
-[![CI](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Sapportly-Tech/sapportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/sapportly-sdk/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@sapportly/widget-sdk.svg)](LICENSE)
 
 **This is the Sapportly Widget SDK** — the official embed helper for the [Sapportly](https://sapportly.pro) chat widget.
@@ -10,7 +10,7 @@ Install **`@sapportly/widget-sdk`**. There is no `@supportly/widget-sdk` on npm.
 
 The product, Site ID (`wgt_…`), CDN (`cdn.sapportly.pro`), and `window.Sapportly` remain **Sapportly**. The npm scope `supportly` is not available for this package, so it is published under the **sapportly** org. Do not confuse this with [`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk) (REST API client) or `@sapportly/api` (internal monorepo package).
 
-Source: [github.com/Sapportly-Tech/supportly-sdk](https://github.com/Sapportly-Tech/supportly-sdk) · Docs: [docs.sapportly.pro/docs/guides/widget](https://docs.sapportly.pro/docs/guides/widget)
+Source: [github.com/Sapportly-Tech/sapportly-sdk](https://github.com/Sapportly-Tech/sapportly-sdk) · Docs: [docs.sapportly.pro/docs/guides/widget](https://docs.sapportly.pro/docs/guides/widget)
 
 Works in any modern browser. Framework helpers for **React**, **Next.js**, **Vue 3**, and **Svelte**. Zero runtime dependencies.
 
