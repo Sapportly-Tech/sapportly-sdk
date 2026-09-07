@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { getSapportly, loadSapportly, supportlyLoaderKey } from "./loader";
+import { getSapportly, loadSapportly, sapportlyLoaderKey } from "./loader";
 import { loaderOptionsFromEnv, type LoaderOptionsFromEnvOptions } from "./options";
 import type {
   SapportlyClient,
@@ -28,7 +28,7 @@ export interface UseSapportlyResult {
 /** React hook — loads the widget (unless `manual`) and exposes the embed API. */
 export function useSapportly(options: UseSapportlyOptions): UseSapportlyResult {
   const { destroyOnUnmount = false, manual = false, ...loaderOptions } = options;
-  const loaderKey = supportlyLoaderKey(loaderOptions);
+  const loaderKey = sapportlyLoaderKey(loaderOptions);
 
   const [client, setClient] = useState<SapportlyClient | null>(() =>
     manual ? getSapportly() : null,
@@ -182,7 +182,7 @@ export function SapportlyWidget({
   destroyOnUnmount = true,
   ...loaderOptions
 }: SapportlyWidgetProps): ReactElement | null {
-  const loaderKey = supportlyLoaderKey(loaderOptions);
+  const loaderKey = sapportlyLoaderKey(loaderOptions);
 
   useEffect(() => {
     let client: SapportlyClient | null = null;

@@ -6,7 +6,7 @@
 
 **This is the Sapportly Widget SDK** — the official embed helper for the [Sapportly](https://sapportly.pro) chat widget.
 
-Install **`@sapportly/widget-sdk`**. There is no `@sapportly/widget-sdk` on npm.
+Install **`@sapportly/widget-sdk`**. There is no `@supportly/widget-sdk` on npm.
 
 The product, Site ID (`wgt_…`), CDN (`cdn.sapportly.pro`), and `window.Sapportly` remain **Sapportly**. The npm scope `supportly` is not available for this package, so it is published under the **sapportly** org. Do not confuse this with [`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk) (REST API client) or `@sapportly/api` (internal monorepo package).
 
@@ -44,7 +44,7 @@ Copy the snippet from **Dashboard → Widget** or:
 ```html
 <script>window.Sapportly=window.Sapportly||{q:[]};</script>
 <script
-  src="https://cdn.sapportly.pro/supportly.widget.js?v=322a4f989216"
+  src="https://cdn.sapportly.pro/supportly.widget.js?v=36da946d2c75"
   data-site-id="wgt_..."
   data-api-url="https://api.sapportly.pro"
   async
@@ -68,7 +68,8 @@ await widget.identify({ email: "ada@example.com", external_id: "user_42" });
 
 ```bash
 # .env.local
-NEXT_PUBLIC_SUPPORTLY_SITE_ID=wgt_...
+NEXT_PUBLIC_SAPPORTLY_SITE_ID=wgt_...
+# legacy alias also works: NEXT_PUBLIC_SUPPORTLY_SITE_ID
 ```
 
 ```typescript
@@ -190,7 +191,7 @@ const { open, ready } = useSapportlyFromEnv();
 | `resolveSiteId()` | Read Site ID from props/env |
 | `buildEmbedSnippet(options)` | HTML copy-paste snippet |
 | `getSapportly()` | Get live client or `null` |
-| `onSapportlyEvent(event, handler)` | DOM `supportly:*` listener |
+| `onSapportlyEvent(event, handler)` | DOM `supportly:*` listener (wire name; product is Sapportly) |
 
 ### `SapportlyClient` (embed shell)
 
@@ -209,7 +210,7 @@ const { open, ready } = useSapportlyFromEnv();
 ```typescript
 import { SapportlyClient } from "@sapportly/sdk";
 
-const client = new SapportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
+const client = new SapportlyClient({ apiKey: process.env.SAPPORTLY_API_KEY ?? process.env.SUPPORTLY_API_KEY! });
 await client.widget.createEmbedSession({ site_id: "wgt_..." });
 ```
 
@@ -238,10 +239,11 @@ await client.widget.createEmbedSession({ site_id: "wgt_..." });
 
 | Variable | Framework |
 |----------|-----------|
-| `NEXT_PUBLIC_SUPPORTLY_SITE_ID` | Next.js |
-| `VITE_SUPPORTLY_SITE_ID` | Vite |
-| `PUBLIC_SUPPORTLY_SITE_ID` | SvelteKit / Astro |
-| `SUPPORTLY_SITE_ID` | Node scripts |
+| `NEXT_PUBLIC_SAPPORTLY_SITE_ID` | Next.js (canon) |
+| `VITE_SAPPORTLY_SITE_ID` | Vite (canon) |
+| `PUBLIC_SAPPORTLY_SITE_ID` | SvelteKit / Astro (canon) |
+| `SAPPORTLY_SITE_ID` | Node scripts (canon) |
+| `NEXT_PUBLIC_SUPPORTLY_SITE_ID` etc. | Legacy aliases (still accepted) |
 
 ## Publishing
 
@@ -249,7 +251,7 @@ Same GitHub repo as `@sapportly/sdk`. Widget releases use tags `widget-vX.Y.Z` (
 
 ## Links
 
-- [Dashboard — Widget settings](https://dashboard.sapportly.pro/widget)
+- [Dashboard — Widget settings](https://app.sapportly.pro/widget)
 - [Documentation](https://docs.sapportly.pro/docs/guides/widget)
 - [Widget REST API](https://docs.sapportly.pro/docs/api/widget)
 - [REST API SDK `@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk)
@@ -258,7 +260,7 @@ Same GitHub repo as `@sapportly/sdk`. Widget releases use tags `widget-vX.Y.Z` (
 
 ## Русский
 
-Это **Sapportly Widget SDK**: на npm пакет **`@sapportly/widget-sdk`**, не `@sapportly/widget-sdk`.
+Это **Sapportly Widget SDK**: на npm пакет **`@sapportly/widget-sdk`**, не `@supportly/widget-sdk`.
 Scope `supportly` для публичных SDK недоступен; org npm — **sapportly**. Продукт и виджет —
 Sapportly (`cdn.sapportly.pro`, Site ID `wgt_…`, `window.Sapportly`).
 

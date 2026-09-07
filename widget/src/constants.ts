@@ -1,5 +1,5 @@
 /** Версия embed-shell + WASM (совпадает с `packages/config/src/widget.ts`). */
-export const WIDGET_SDK_VERSION = "1.2.0";
+export const WIDGET_SDK_VERSION = "1.3.0";
 
 /** SHA256-префикс `supportly_widget_bg.wasm` — штампует `packages/widget/build.ps1`. */
 export const WIDGET_WASM_ASSET_VERSION = "36da946d2c75";

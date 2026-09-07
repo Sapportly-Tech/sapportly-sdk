@@ -1,13 +1,21 @@
 # Changelog
 
+## 1.3.0 — 2026-09-08
+
+**Rebrand release** (npm `1.2.0` still pointed at Supportly / `supportly.cc`).
+
+- Product + defaults: **Sapportly**, `api.sapportly.pro`, `cdn.sapportly.pro`, `window.Sapportly`.
+- Public exports: `Sapportly*` / `getSapportly` / `loadSapportly` / `installWidget` (breaking vs npm 1.2.0 `Supportly*` names).
+- Site ID env: canon `SAPPORTLY_SITE_ID` / `NEXT_PUBLIC_SAPPORTLY_SITE_ID` / `VITE_*` / `PUBLIC_*`; legacy `SUPPORTLY_*` still accepted.
+- WASM/glue hashes synced with `packages/config`: `36da946d2c75` / `fa75b82c5535`.
+- Docs: GitHub `Sapportly-Tech/supportly-sdk`, panel `app.sapportly.pro`.
+- CDN shell filename remains `supportly.widget.js`; DOM events remain `supportly:*` (wire compatibility).
+
 ## 1.2.0 — 2026-08-20
 
-Первая публичная публикация как **`@sapportly/widget-sdk`** (npm org **sapportly**).
-Пакета `@sapportly/widget-sdk` на npm нет: scope `supportly` для публичных SDK недоступен.
-Продукт, Site ID (`wgt_…`), CDN (`cdn.sapportly.pro`) и `window.Sapportly` — Sapportly.
+Первая публикация как **`@sapportly/widget-sdk`** (npm org **sapportly**).
+На npm в этой версии ещё были defaults `supportly.cc` и `window.Supportly` — заменены в **1.3.0**.
 
 - Loader, сниппет, env-хелперы, обёртки React / Vue / Svelte / Next.js.
-- Хеши cache-bust WASM/glue синхронизированы с `packages/config` (`322a4f989216` / `56e303416791`).
-- Экспорт `./api` убран: headless REST — `@sapportly/sdk` (`client.widget`), не внутренний `@sapportly/api`.
-- В хуках появился `identify()` — те же traits, что у `window.Sapportly.identify` (`external_id` / `externalId`).
+- Экспорт `./api` убран: headless REST — `@sapportly/sdk` (`client.widget`).
 - Репозиторий: [Sapportly-Tech/supportly-sdk](https://github.com/Sapportly-Tech/supportly-sdk) (`widget/`).

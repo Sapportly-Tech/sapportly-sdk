@@ -1,7 +1,7 @@
 /**
  * `@sapportly/widget-sdk` — публичный embed SDK (vanilla / React / Vue / Next / Svelte).
  *
- * Имя на npm — `@sapportly/widget-sdk`, не `@sapportly/widget-sdk`.
+ * Имя на npm — `@sapportly/widget-sdk`, не `@supportly/widget-sdk`.
  * Продукт, Site ID (`wgt_…`) и глобал `window.Sapportly` — Sapportly.
  * Не путать с `@sapportly/sdk` (REST) и с panel JWT.
  */
@@ -43,6 +43,7 @@ export {
   installSapportly,
   onSapportlyEvent,
   supportlyLoaderKey,
+  sapportlyLoaderKey,
 } from "./loader";
 
 export type {

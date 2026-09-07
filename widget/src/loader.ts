@@ -125,7 +125,7 @@ export function onSapportlyEvent(
 }
 
 /** Stable dependency key for framework hooks (siteId + urls). */
-export function supportlyLoaderKey(options: SapportlyLoaderOptions): string {
+export function sapportlyLoaderKey(options: SapportlyLoaderOptions): string {
   return [
     options.siteId,
     options.apiUrl ?? "",
@@ -134,3 +134,6 @@ export function supportlyLoaderKey(options: SapportlyLoaderOptions): string {
     options.version ?? "",
   ].join("|");
 }
+
+/** @deprecated Use {@link sapportlyLoaderKey}. */
+export const supportlyLoaderKey = sapportlyLoaderKey;

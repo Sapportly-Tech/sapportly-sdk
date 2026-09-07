@@ -2,6 +2,11 @@ import type { SapportlyLoaderOptions } from "./types";
 
 /** Common env var names for the public widget Site ID (`wgt_…`). */
 export const DEFAULT_SITE_ID_ENV_KEYS = [
+  "NEXT_PUBLIC_SAPPORTLY_SITE_ID",
+  "VITE_SAPPORTLY_SITE_ID",
+  "PUBLIC_SAPPORTLY_SITE_ID",
+  "SAPPORTLY_SITE_ID",
+  // Legacy aliases (pre-rebrand npm 1.2.0).
   "NEXT_PUBLIC_SUPPORTLY_SITE_ID",
   "VITE_SUPPORTLY_SITE_ID",
   "PUBLIC_SUPPORTLY_SITE_ID",

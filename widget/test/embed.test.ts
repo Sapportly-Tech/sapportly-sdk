@@ -7,7 +7,7 @@ import {
   WIDGET_SDK_VERSION,
   WIDGET_WASM_ASSET_VERSION,
 } from "../src/constants";
-import { supportlyLoaderKey } from "../src/loader";
+import { sapportlyLoaderKey, supportlyLoaderKey } from "../src/loader";
 import {
   createLoaderOptions,
   loaderOptionsFromEnv,
@@ -25,6 +25,10 @@ const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
 };
 
 const SITE_ENV_KEYS = [
+  "NEXT_PUBLIC_SAPPORTLY_SITE_ID",
+  "VITE_SAPPORTLY_SITE_ID",
+  "PUBLIC_SAPPORTLY_SITE_ID",
+  "SAPPORTLY_SITE_ID",
   "NEXT_PUBLIC_SUPPORTLY_SITE_ID",
   "VITE_SUPPORTLY_SITE_ID",
   "PUBLIC_SUPPORTLY_SITE_ID",
@@ -105,10 +109,16 @@ describe("options", () => {
     expect(resolveSiteId({ siteId: "  wgt_explicit  " })).toBe("wgt_explicit");
   });
 
-  it("читает SUPPORTLY_SITE_ID", () => {
+  it("читает SAPPORTLY_SITE_ID (canon)", () => {
     clearSiteEnv();
-    process.env.SUPPORTLY_SITE_ID = "wgt_from_env";
+    process.env.SAPPORTLY_SITE_ID = "wgt_from_env";
     expect(resolveSiteId()).toBe("wgt_from_env");
+  });
+
+  it("читает legacy SUPPORTLY_SITE_ID", () => {
+    clearSiteEnv();
+    process.env.SUPPORTLY_SITE_ID = "wgt_legacy";
+    expect(resolveSiteId()).toBe("wgt_legacy");
   });
 
   it("loaderOptionsFromEnv бросает без Site ID", () => {
@@ -125,9 +135,9 @@ describe("options", () => {
 
 describe("loader key", () => {
   it("стабилен для одинаковых опций", () => {
-    const a = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.sapportly.pro" });
+    const a = sapportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.sapportly.pro" });
     const b = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.sapportly.pro" });
     expect(a).toBe(b);
-    expect(supportlyLoaderKey({ siteId: "wgt_2" })).not.toBe(a);
+    expect(sapportlyLoaderKey({ siteId: "wgt_2" })).not.toBe(a);
   });
 });
