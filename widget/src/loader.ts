@@ -1,7 +1,7 @@
 import { buildScriptAttributes, buildScriptUrl } from "./snippet";
 import { createLoaderOptions } from "./options";
-import type { SupportlyClient, SupportlyEvent, SupportlyEventDetail, SupportlyLoaderOptions } from "./types";
-import { isSupportlyClient } from "./types";
+import type { SapportlyClient, SapportlyEvent, SapportlyEventDetail, SapportlyLoaderOptions } from "./types";
+import { isSapportlyClient } from "./types";
 
 const DEFAULT_SCRIPT_ID = "supportly-widget-script";
 const DEFAULT_STUB_ID = "supportly-widget-stub";
@@ -11,51 +11,51 @@ export function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof document !== "undefined";
 }
 
-/** Inject the pre-load command queue stub (`window.Supportly = { q: [] }`). */
+/** Inject the pre-load command queue stub (`window.Sapportly = { q: [] }`). */
 export function injectQueueStub(stubId = DEFAULT_STUB_ID): void {
   if (!isBrowser()) return;
   if (document.getElementById(stubId)) return;
 
-  const existing = window.Supportly;
-  if (isSupportlyClient(existing)) return;
+  const existing = window.Sapportly;
+  if (isSapportlyClient(existing)) return;
 
   if (!existing) {
-    window.Supportly = { q: [] };
+    window.Sapportly = { q: [] };
     return;
   }
 
   if (!("q" in existing) || !Array.isArray(existing.q)) {
-    window.Supportly = { q: [] };
+    window.Sapportly = { q: [] };
   }
 }
 
-/** Return the live `window.Supportly` client, or `null` if not loaded yet. */
-export function getSupportly(): SupportlyClient | null {
+/** Return the live `window.Sapportly` client, or `null` if not loaded yet. */
+export function getSapportly(): SapportlyClient | null {
   if (!isBrowser()) return null;
-  const api = window.Supportly;
-  return isSupportlyClient(api) && !api.isDestroyed() ? api : null;
+  const api = window.Sapportly;
+  return isSapportlyClient(api) && !api.isDestroyed() ? api : null;
 }
 
-/** Wait until `window.Supportly` is ready (polls after script injection). */
-export function waitForSupportly(timeoutMs = 30_000): Promise<SupportlyClient> {
+/** Wait until `window.Sapportly` is ready (polls after script injection). */
+export function waitForSapportly(timeoutMs = 30_000): Promise<SapportlyClient> {
   if (!isBrowser()) {
-    return Promise.reject(new Error("waitForSupportly() requires a browser environment"));
+    return Promise.reject(new Error("waitForSapportly() requires a browser environment"));
   }
 
-  const existing = getSupportly();
+  const existing = getSapportly();
   if (existing) return existing.ready.then(() => existing);
 
   return new Promise((resolve, reject) => {
     const started = Date.now();
 
     const tick = () => {
-      const api = window.Supportly;
-      if (isSupportlyClient(api)) {
+      const api = window.Sapportly;
+      if (isSapportlyClient(api)) {
         api.ready.then(() => resolve(api)).catch(reject);
         return;
       }
       if (Date.now() - started > timeoutMs) {
-        reject(new Error("Supportly widget script failed to load within timeout"));
+        reject(new Error("Sapportly widget script failed to load within timeout"));
         return;
       }
       setTimeout(tick, 50);
@@ -66,12 +66,12 @@ export function waitForSupportly(timeoutMs = 30_000): Promise<SupportlyClient> {
 }
 
 /** Dynamically inject the embed shell `<script>` and return the typed client. */
-export async function loadSupportly(options: SupportlyLoaderOptions): Promise<SupportlyClient> {
+export async function loadSapportly(options: SapportlyLoaderOptions): Promise<SapportlyClient> {
   if (!isBrowser()) {
-    throw new Error("loadSupportly() requires a browser environment");
+    throw new Error("loadSapportly() requires a browser environment");
   }
 
-  const existing = getSupportly();
+  const existing = getSapportly();
   if (existing) return existing.ready.then(() => existing);
 
   const scriptId = options.scriptId ?? DEFAULT_SCRIPT_ID;
@@ -92,32 +92,32 @@ export async function loadSupportly(options: SupportlyLoaderOptions): Promise<Su
     document.head.appendChild(script);
   }
 
-  return waitForSupportly(options.timeoutMs);
+  return waitForSapportly(options.timeoutMs);
 }
 
 /**
  * One-liner: inject the embed shell and return the typed client.
- * Accepts a Site ID string or full {@link SupportlyLoaderOptions}.
+ * Accepts a Site ID string or full {@link SapportlyLoaderOptions}.
  */
 export async function installWidget(
-  siteIdOrOptions: string | SupportlyLoaderOptions,
-  overrides?: Partial<SupportlyLoaderOptions>,
-): Promise<SupportlyClient> {
-  return loadSupportly(createLoaderOptions(siteIdOrOptions, overrides));
+  siteIdOrOptions: string | SapportlyLoaderOptions,
+  overrides?: Partial<SapportlyLoaderOptions>,
+): Promise<SapportlyClient> {
+  return loadSapportly(createLoaderOptions(siteIdOrOptions, overrides));
 }
 
-/** @deprecated Use {@link installWidget} or {@link loadSupportly}. */
-export const installSupportly = installWidget;
+/** @deprecated Use {@link installWidget} or {@link loadSapportly}. */
+export const installSapportly = installWidget;
 
 /** Subscribe to embed events via DOM `supportly:*` CustomEvents. */
-export function onSupportlyEvent(
-  event: SupportlyEvent,
-  handler: (detail?: SupportlyEventDetail) => void,
+export function onSapportlyEvent(
+  event: SapportlyEvent,
+  handler: (detail?: SapportlyEventDetail) => void,
 ): () => void {
   if (!isBrowser()) return () => {};
 
   const listener = (e: Event) => {
-    handler((e as CustomEvent<SupportlyEventDetail>).detail);
+    handler((e as CustomEvent<SapportlyEventDetail>).detail);
   };
 
   window.addEventListener(`supportly:${event}`, listener);
@@ -125,7 +125,7 @@ export function onSupportlyEvent(
 }
 
 /** Stable dependency key for framework hooks (siteId + urls). */
-export function supportlyLoaderKey(options: SupportlyLoaderOptions): string {
+export function supportlyLoaderKey(options: SapportlyLoaderOptions): string {
   return [
     options.siteId,
     options.apiUrl ?? "",

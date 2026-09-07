@@ -1,16 +1,16 @@
 {
   "name": "@sapportly/widget-sdk",
   "version": "1.2.0",
-  "description": "Sapportly Widget SDK (@sapportly/widget-sdk) — official embed helper for the Supportly chat widget. Not @supportly/widget-sdk: that npm name is unused; org is sapportly.",
+  "description": "Sapportly Widget SDK (@sapportly/widget-sdk) — official embed helper for the Sapportly chat widget. Not @sapportly/widget-sdk: that npm name is unused; org is sapportly.",
   "license": "MIT",
-  "author": "Supportly <ac@supportly.cc>",
+  "author": "Sapportly <ac@sapportly.pro>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Supportly-Tech/supportly-sdk.git",
+    "url": "git+https://github.com/Sapportly-Tech/supportly-sdk.git",
     "directory": "widget"
   },
-  "homepage": "https://docs.supportly.cc/docs/guides/widget",
-  "bugs": "https://github.com/Supportly-Tech/supportly-sdk/issues",
+  "homepage": "https://docs.sapportly.pro/docs/guides/widget",
+  "bugs": "https://github.com/Sapportly-Tech/supportly-sdk/issues",
   "keywords": [
     "sapportly",
     "supportly",

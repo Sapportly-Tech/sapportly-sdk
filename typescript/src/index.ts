@@ -1,8 +1,8 @@
 /**
- * `@sapportly/sdk` — Sapportly TypeScript SDK, официальный клиент публичного API Supportly.
+ * `@sapportly/sdk` — Sapportly TypeScript SDK, официальный клиент публичного API Sapportly.
  *
  * Пакет на npm — `@sapportly/sdk`, не `@supportly/sdk`: scope `supportly` для этого SDK
- * недоступен. Продукт, API (`api.supportly.cc`) и классы (`SupportlyClient`) — Supportly.
+ * недоступен. Продукт, API (`api.sapportly.pro`) и классы (`SapportlyClient`) — Sapportly.
  *
  * Runtime-agnostic: нужен только глобальный `fetch`
  * (Node 18+, Bun, Deno, Cloudflare Workers, браузеры). Без runtime-зависимостей.
@@ -14,7 +14,7 @@
  * ```
  */
 
-export { SupportlyClient, type SupportlyClientOptions } from "./client";
+export { SapportlyClient, type SapportlyClientOptions } from "./client";
 
 export {
   type AuthMode,
@@ -28,20 +28,20 @@ export {
 
 export {
   isRetryableError,
-  SupportlyAuthError,
-  SupportlyConfigError,
-  SupportlyConnectionError,
-  SupportlyError,
-  type SupportlyErrorInit,
-  type SupportlyErrorName,
-  SupportlyNotFoundError,
-  SupportlyPayloadTooLargeError,
-  SupportlyPaymentRequiredError,
-  SupportlyPermissionError,
-  SupportlyRateLimitError,
-  SupportlyServerError,
-  SupportlyTimeoutError,
-  SupportlyValidationError,
+  SapportlyAuthError,
+  SapportlyConfigError,
+  SapportlyConnectionError,
+  SapportlyError,
+  type SapportlyErrorInit,
+  type SapportlyErrorName,
+  SapportlyNotFoundError,
+  SapportlyPayloadTooLargeError,
+  SapportlyPaymentRequiredError,
+  SapportlyPermissionError,
+  SapportlyRateLimitError,
+  SapportlyServerError,
+  SapportlyTimeoutError,
+  SapportlyValidationError,
 } from "./errors";
 
 export {
@@ -51,6 +51,8 @@ export {
   paginatePages,
   type PaginationLimits,
   type ListEnvelope,
+  type ListPage,
+  parseListBody,
   unwrapList,
 } from "./pagination";
 
@@ -77,23 +79,27 @@ export {
   type ParsedConversationKey,
 } from "./channels";
 
-export { extractMessageId, MessageDeduper, type MessageDeduperOptions } from "./dedup";
+export {
+  ExternalMessageSeenStore,
+  extractMessageId,
+  MessageDeduper,
+  type ExternalMessageSeenStoreOptions,
+  type ExternalSeenStoreHooks,
+  type MessageDeduperOptions,
+  type MessageSeenStore,
+} from "./dedup";
+
+export {
+  catchUpInbox,
+  likelyAgentMessage,
+  type CatchUpMessage,
+  type CatchUpOptions,
+  type CatchUpResult,
+} from "./catch-up";
 
 export { websocketUrl } from "./resources/realtime";
 
-export { SupportlyInbox, type InboxMessage, type InboxOptions } from "./inbox";
-export {
-  classifyWireEvent,
-  isAgentReply,
-  isAgentRole,
-  isVisitorMessage,
-  nodeWebSocketFactory,
-  parseWireEvent,
-  type AiDraftPayload,
-  type ClassifiedWireEvent,
-  type MessageDeliveredPayload,
-  type WireKind,
-} from "./wire";
+// Inbox / wire helpers: `@sapportly/sdk/realtime` (HTTP-only apps skip WS code).
 
 export {
   type UploadContent,
@@ -106,6 +112,7 @@ export {
   timingSafeEqual,
   verifyWebhook,
   verifyWebhookRequest,
+  WebhookReplayGuard,
   WEBHOOK_SIGNATURE_HEADER,
   WEBHOOK_TIMESTAMP_HEADER,
   WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS,

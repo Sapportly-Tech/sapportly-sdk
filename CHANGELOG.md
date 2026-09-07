@@ -1,13 +1,30 @@
-# Supportly SDKs — Changelog
+# Sapportly SDKs — Changelog
 
 Canonical contract: [`SPEC.md`](./SPEC.md).
 
 Публичный клиент на npm — **Sapportly TypeScript SDK** `@sapportly/sdk` и **Sapportly Widget SDK** `@sapportly/widget-sdk` (org **sapportly**).
-Пакетов `@supportly/sdk` / `@supportly/widget-sdk` нет: эти имена на npm недоступны.
+Пакетов `@sapportly/sdk` / `@sapportly/widget-sdk` нет: эти имена на npm недоступны.
 
 ## Unreleased
 
-- **`@sapportly/widget-sdk` 1.2.0** — публичный embed SDK в `widget/` (тот же GitHub-репо). Экспорт `./api` убран; headless REST — `@sapportly/sdk`.
+## @sapportly/sdk 1.4.1 — 2026-09-08
+
+- Opt-in inbox `releaseOnHandlerError` / `MessageSeenStore.release`; bare-list DIY warn.
+  SPEC → **2.2.2**.
+
+## @sapportly/sdk 1.4.0 — 2026-09-07
+
+- Pagination stops on `has_more: false`; inbox awaits atomic claim + per-id queue;
+  idempotency CSPRNG-only; empty webhook secret rejected; 401 → AuthError.
+  SPEC → **2.2.1** (at-most-once/`onError`, cap-only contacts/assignment).
+- W1 contract notes: ingest 202 stable `message_id`+channel; bad `sk_live_` → 401;
+  channel path slug hardening; analytics `metric_not_registered`.
+- BH-6: `conversation.escalated` HMAC is panel-rotated secret (see typescript CHANGELOG).
+
+## @sapportly/widget-sdk 1.2.0
+
+- Публичный embed SDK в `widget/` (тот же GitHub-репо). Экспорт `./api` убран;
+  headless REST — `@sapportly/sdk`.
 
 ## 2.0.0 — 2026-07-30
 
@@ -75,7 +92,7 @@ _None — TypeScript v0.2.0 ships attachments, conversations, and realtime (MSG-
 
 - `client.conversations.list/messages/reply` with API key auth.
 - `client.attachments.upload()` — full presigned upload flow.
-- `client.realtime.issueTicket()` + `SupportlyRealtime.connect()` (`@sapportly/sdk/realtime`).
+- `client.realtime.issueTicket()` + `SapportlyRealtime.connect()` (`@sapportly/sdk/realtime`).
 - `MessageDeduper`, `extractMessageId`, `websocketTicketUrl` (ADR-003).
 
 ## 1.1.0 — 2026-07-14

@@ -1,5 +1,5 @@
 import { generateIdempotencyKey } from "../idempotency";
-import { paginate, paginatePages, type PaginationLimits } from "../pagination";
+import { paginate, paginatePages, type ListPage, type PaginationLimits } from "../pagination";
 import type { RequestOptions, Transport } from "../transport";
 import type {
   AssignmentEvent,
@@ -47,6 +47,11 @@ export class ConversationsResource {
    * For the next page pass the final item's `last_at` and `channel` as
    * `before_at` / `before_channel`, or use {@link iterate}.
    */
+  /**
+   * One page as a bare array (envelope unwrapped — no `has_more`).
+   * For DIY paging use {@link listPage} / {@link iterate}; do not loop while
+   `page.length === limit` (full final pages would infinite-loop).
+   */
   list(
     params: ListConversationsParams = {},
     options?: RequestOptions,
@@ -66,6 +71,25 @@ export class ConversationsResource {
     });
   }
 
+  /** Same as {@link list}, but keeps envelope `has_more` / `next_cursor` (P-08). */
+  listPage(
+    params: ListConversationsParams = {},
+    options?: RequestOptions,
+  ): Promise<ListPage<ConversationSummary>> {
+    return this.transport.requestListPage<ConversationSummary>({
+      method: "GET",
+      path: "/v1/conversations",
+      auth: "apiKey",
+      query: {
+        limit: params.limit ?? DEFAULT_CONVERSATION_LIMIT,
+        q: params.q,
+        before_at: params.before_at,
+        before_channel: params.before_channel,
+      },
+      options,
+    });
+  }
+
   /** Walks every conversation, newest first, one page at a time. */
   iterate(
     params: ListConversationsParams & PaginationLimits = {},
@@ -76,11 +100,12 @@ export class ConversationsResource {
       limit,
       maxItems: params.maxItems,
       maxPages: params.maxPages,
-      fetchPage: (cursor) => this.list({ ...params, limit, ...cursor }, options),
+      fetchPage: (cursor) => this.listPage({ ...params, limit, ...cursor }, options),
       cursorFrom: (page) => {
         const last = page[page.length - 1];
         return last ? { before_at: last.last_at, before_channel: last.channel } : undefined;
       },
+      cursorFromEnvelope: (next) => conversationCursorFromEnvelope(next),
     });
   }
 
@@ -89,6 +114,10 @@ export class ConversationsResource {
    *
    * The endpoint pages backwards in time: the next (older) page is requested
    * with the cursor fields of `page[0]`. {@link iterateMessages} does that.
+   */
+  /**
+   * One page as a bare array (no `has_more`). Prefer {@link messagesPage} /
+   {@link iterateMessagePages} for pagination.
    */
   messages(
     channelKey: string,
@@ -110,6 +139,27 @@ export class ConversationsResource {
     });
   }
 
+
+  /** Same as {@link messages}, preserving list envelope metadata (P-08). */
+  messagesPage(
+    channelKey: string,
+    params: ListMessagesParams = {},
+    options?: RequestOptions,
+  ): Promise<ListPage<Message>> {
+    return this.transport.requestListPage<Message>({
+      method: "GET",
+      path: `/v1/conversations/${encodeURIComponent(channelKey)}/messages`,
+      auth: "apiKey",
+      query: {
+        limit: params.limit ?? DEFAULT_MESSAGE_LIMIT,
+        before_message_at: params.before_message_at,
+        before_message_id: params.before_message_id,
+        before_channel_sequence: params.before_channel_sequence,
+      },
+      options,
+    });
+  }
+
   /**
    * Walks channel history backwards in time, newest page first. Each yielded
    * page is chronological internally.
@@ -124,7 +174,7 @@ export class ConversationsResource {
       limit,
       maxItems: params.maxItems,
       maxPages: params.maxPages,
-      fetchPage: (cursor) => this.messages(channelKey, { ...params, limit, ...cursor }, options),
+      fetchPage: (cursor) => this.messagesPage(channelKey, { ...params, limit, ...cursor }, options),
       cursorFrom: (page) => {
         const oldest = page[0];
         return oldest
@@ -135,6 +185,7 @@ export class ConversationsResource {
             }
           : undefined;
       },
+      cursorFromEnvelope: (next) => messageCursorFromEnvelope(next),
     });
   }
 
@@ -221,7 +272,10 @@ export class ConversationsResource {
     });
   }
 
-  /** Assignment history, newest first. */
+  /**
+   * Assignment history, newest first (cap-only; no keyset cursor).
+   * Prefer {@link assignmentHistoryPage}; do not DIY-loop on page length.
+   */
   assignmentHistory(
     channelKey: string,
     params: { limit?: number } = {},
@@ -236,4 +290,42 @@ export class ConversationsResource {
       options,
     });
   }
+
+  /** Same as {@link assignmentHistory}, preserving envelope metadata. */
+  assignmentHistoryPage(
+    channelKey: string,
+    params: { limit?: number } = {},
+    options?: RequestOptions,
+  ): Promise<ListPage<AssignmentEvent>> {
+    return this.transport.requestListPage<AssignmentEvent>({
+      method: "GET",
+      path: `/v1/conversations/${encodeURIComponent(channelKey)}/assignment/history`,
+      auth: "apiKey",
+      query: { limit: params.limit ?? DEFAULT_CONVERSATION_LIMIT },
+      options,
+    });
+  }
+}
+
+function conversationCursorFromEnvelope(next: unknown): ConversationCursor | undefined {
+  if (!next || typeof next !== "object") return undefined;
+  const c = next as Record<string, unknown>;
+  if (typeof c.before_at === "string" && typeof c.before_channel === "string") {
+    return { before_at: c.before_at, before_channel: c.before_channel };
+  }
+  return undefined;
+}
+
+function messageCursorFromEnvelope(next: unknown): MessageCursor | undefined {
+  if (!next || typeof next !== "object") return undefined;
+  const c = next as Record<string, unknown>;
+  if (typeof c.before_message_at !== "string" || typeof c.before_message_id !== "string") {
+    return undefined;
+  }
+  const seq = c.before_channel_sequence;
+  return {
+    before_message_at: c.before_message_at,
+    before_message_id: c.before_message_id,
+    before_channel_sequence: typeof seq === "number" ? seq : null,
+  };
 }

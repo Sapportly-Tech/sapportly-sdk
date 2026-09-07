@@ -17,25 +17,25 @@ import {
 } from "./transport";
 import type { HealthResponse, ReadyResponse, StatusResponse } from "./types";
 
-export type SupportlyClientOptions = ClientOptions;
+export type SapportlyClientOptions = ClientOptions;
 
 /**
- * Client for the Supportly **public API** (`api.supportly.cc`).
+ * Client for the Sapportly **public API** (`api.sapportly.pro`).
  *
  * Authenticates with a tenant API key (`sk_live_…`) whose scopes decide which
  * resources are reachable. Panel/operator endpoints live on a different host
  * behind a session JWT and are intentionally absent here.
  *
  * ```ts
- * import { SupportlyClient } from "@sapportly/sdk";
+ * import { SapportlyClient } from "@sapportly/sdk";
  *
- * const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
+ * const client = new SapportlyClient({ apiKey: process.env.SAPPORTLY_API_KEY ?? process.env.SUPPORTLY_API_KEY! });
  *
  * await client.ingest.send({ channel: "custom:shop", body: "Где заказ?" });
  * ```
  */
-export class SupportlyClient {
-  private readonly transport: Transport;
+export class SapportlyClient {
+  /** @internal */ readonly transport: Transport;
 
   /** `POST /v1/ingest/messages` — scope `messages:write`. */
   readonly ingest: IngestResource;
@@ -60,7 +60,7 @@ export class SupportlyClient {
   /** `/v1/rag/documents` — scope `attachments:write`. */
   readonly rag: RagResource;
 
-  constructor(options: SupportlyClientOptions = {}) {
+  constructor(options: SapportlyClientOptions = {}) {
     this.transport = new Transport(options);
 
     this.ingest = new IngestResource(this.transport);
@@ -113,7 +113,7 @@ export class SupportlyClient {
    * `GET /ready` — dependency readiness. Unauthenticated.
    *
    * Answers 503 when a dependency is down, which the SDK surfaces as a
-   * `SupportlyServerError`; catch it if you want the body rather than a throw.
+   * `SapportlyServerError`; catch it if you want the body rather than a throw.
    */
   ready(options?: RequestOptions): Promise<ReadyResponse> {
     return this.transport.request<ReadyResponse>({

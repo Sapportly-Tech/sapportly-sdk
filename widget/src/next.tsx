@@ -3,16 +3,16 @@
 import Script from "next/script";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_API_URL } from "./constants";
-import { getSupportly, waitForSupportly } from "./loader";
+import { getSapportly, waitForSapportly } from "./loader";
 import { loaderOptionsFromEnv, type LoaderOptionsFromEnvOptions } from "./options";
 import { buildScriptAttributes, buildScriptUrl } from "./snippet";
 import type {
-  SupportlyClient,
-  SupportlyIdentifyTraits,
-  SupportlyLoaderOptions,
+  SapportlyClient,
+  SapportlyIdentifyTraits,
+  SapportlyLoaderOptions,
 } from "./types";
 
-export interface SupportlyScriptProps extends SupportlyLoaderOptions {
+export interface SapportlyScriptProps extends SapportlyLoaderOptions {
   /** next/script loading strategy (default: `afterInteractive`). */
   strategy?: "afterInteractive" | "lazyOnload" | "beforeInteractive" | "worker";
 }
@@ -21,12 +21,12 @@ export interface SupportlyScriptProps extends SupportlyLoaderOptions {
  * Next.js App Router / Pages — inject stub + embed shell via `next/script`.
  * Place in a Client Component layout or page.
  */
-export function SupportlyScript({
+export function SapportlyScript({
   strategy = "afterInteractive",
   queueStub = true,
   scriptId = "supportly-widget-script",
   ...options
-}: SupportlyScriptProps) {
+}: SapportlyScriptProps) {
   const src = buildScriptUrl(options);
   const attrs = buildScriptAttributes(options);
 
@@ -34,7 +34,7 @@ export function SupportlyScript({
     <>
       {queueStub ? (
         <Script id="supportly-widget-stub" strategy={strategy}>
-          {`window.Supportly=window.Supportly||{q:[]};`}
+          {`window.Sapportly=window.Sapportly||{q:[]};`}
         </Script>
       ) : null}
       <Script
@@ -53,41 +53,41 @@ export function SupportlyScript({
   );
 }
 
-export interface SupportlyScriptFromEnvProps
-  extends Omit<SupportlyScriptProps, "siteId">,
+export interface SapportlyScriptFromEnvProps
+  extends Omit<SapportlyScriptProps, "siteId">,
     LoaderOptionsFromEnvOptions {}
 
 /** Next.js script tag — Site ID from prop or `NEXT_PUBLIC_SUPPORTLY_SITE_ID`. */
-export function SupportlyScriptFromEnv(props: SupportlyScriptFromEnvProps) {
+export function SapportlyScriptFromEnv(props: SapportlyScriptFromEnvProps) {
   const { siteId, apiUrl, cdnUrl, wsUrl, version, envKeys, ...rest } = props;
   const options = useMemo(
     () => loaderOptionsFromEnv({ siteId, apiUrl, cdnUrl, wsUrl, version, envKeys }),
     [siteId, apiUrl, cdnUrl, wsUrl, version, envKeys],
   );
-  return <SupportlyScript {...rest} {...options} />;
+  return <SapportlyScript {...rest} {...options} />;
 }
 
-export interface UseSupportlyClientResult {
-  client: SupportlyClient | null;
+export interface UseSapportlyClientResult {
+  client: SapportlyClient | null;
   ready: boolean;
   error: Error | null;
   open: () => Promise<void>;
   close: () => Promise<void>;
   toggle: () => Promise<void>;
   track: (name: string, properties?: Record<string, unknown>) => void;
-  identify: (traits?: SupportlyIdentifyTraits) => Promise<{ ok: boolean }>;
+  identify: (traits?: SapportlyIdentifyTraits) => Promise<{ ok: boolean }>;
 }
 
-/** Hook for apps that render `<SupportlyScript />` separately. */
-export function useSupportlyClient(timeoutMs = 30_000): UseSupportlyClientResult {
-  const [client, setClient] = useState<SupportlyClient | null>(() => getSupportly());
+/** Hook for apps that render `<SapportlyScript />` separately. */
+export function useSapportlyClient(timeoutMs = 30_000): UseSapportlyClientResult {
+  const [client, setClient] = useState<SapportlyClient | null>(() => getSapportly());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    waitForSupportly(timeoutMs)
+    waitForSapportly(timeoutMs)
       .then((instance) => {
         if (cancelled) return;
         setClient(instance);
@@ -123,7 +123,7 @@ export function useSupportlyClient(timeoutMs = 30_000): UseSupportlyClientResult
   );
 
   const identify = useCallback(
-    async (traits?: SupportlyIdentifyTraits) => {
+    async (traits?: SapportlyIdentifyTraits) => {
       if (!client) return { ok: false };
       return client.identify(traits);
     },
@@ -133,4 +133,4 @@ export function useSupportlyClient(timeoutMs = 30_000): UseSupportlyClientResult
   return { client, ready, error, open, close, toggle, track, identify };
 }
 
-export type { SupportlyClient, SupportlyIdentifyTraits, SupportlyLoaderOptions };
+export type { SapportlyClient, SapportlyIdentifyTraits, SapportlyLoaderOptions };

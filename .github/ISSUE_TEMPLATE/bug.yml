@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for reporting a bug in the **Sapportly TypeScript SDK** (`@sapportly/sdk`).
-        There is no `@supportly/sdk` on npm. Please include a minimal reproduction if possible.
+        There is no `@sapportly/sdk` on npm. Please include a minimal reproduction if possible.
         Do not include API keys or webhook secrets.
   - type: textarea
     id: description

@@ -1,7 +1,7 @@
 import type { WidgetAnalyticsEventId } from "./constants";
 
-/** Events emitted via `Supportly.on()` and `supportly:*` DOM events. */
-export type SupportlyEvent =
+/** Events emitted via `Sapportly.on()` and `supportly:*` DOM events. */
+export type SapportlyEvent =
   | "ready"
   | "config"
   | "open"
@@ -11,15 +11,15 @@ export type SupportlyEvent =
   | "error"
   | "track";
 
-export type SupportlyEventDetail = Record<string, unknown>;
+export type SapportlyEventDetail = Record<string, unknown>;
 
-/** Options passed to `loadSupportly()` and framework helpers. */
-export interface SupportlyLoaderOptions {
+/** Options passed to `loadSapportly()` and framework helpers. */
+export interface SapportlyLoaderOptions {
   /** Public widget site id (`wgt_…`). */
   siteId: string;
-  /** REST API base URL (default: `https://api.supportly.cc`). */
+  /** REST API base URL (default: `https://api.sapportly.pro`). */
   apiUrl?: string;
-  /** CDN base URL for widget assets (default: `https://cdn.supportly.cc`). */
+  /** CDN base URL for widget assets (default: `https://cdn.sapportly.pro`). */
   cdnUrl?: string;
   /** WebSocket URL override. */
   wsUrl?: string;
@@ -42,15 +42,15 @@ export interface SupportlyLoaderOptions {
 }
 
 /** CRM-поля посетителя для `POST /v1/widget/identify` (лента `widget:{uuid}`). */
-export interface SupportlyIdentifyTraits {
+export interface SapportlyIdentifyTraits {
   email?: string;
   phone?: string;
   external_id?: string;
   externalId?: string;
 }
 
-/** Runtime API exposed as `window.Supportly` after the embed shell loads. */
-export interface SupportlyClient {
+/** Runtime API exposed as `window.Sapportly` after the embed shell loads. */
+export interface SapportlyClient {
   version: string;
   ready: Promise<void>;
   boot(): Promise<void>;
@@ -58,9 +58,9 @@ export interface SupportlyClient {
   close(): Promise<void>;
   toggle(): Promise<void>;
   track(name: string, properties?: Record<string, unknown>): void;
-  identify(traits?: SupportlyIdentifyTraits): Promise<{ ok: boolean }>;
-  on(event: SupportlyEvent, handler: (detail?: SupportlyEventDetail) => void): () => void;
-  off(event: SupportlyEvent, handler: (detail?: SupportlyEventDetail) => void): void;
+  identify(traits?: SapportlyIdentifyTraits): Promise<{ ok: boolean }>;
+  on(event: SapportlyEvent, handler: (detail?: SapportlyEventDetail) => void): () => void;
+  off(event: SapportlyEvent, handler: (detail?: SapportlyEventDetail) => void): void;
   destroy(): Promise<void>;
   reloadConfig(): Promise<void>;
   getConfig(): unknown;
@@ -71,19 +71,19 @@ export interface SupportlyClient {
   isDestroyed(): boolean;
 }
 
-/** Queue stub shape before the embed shell replaces `window.Supportly`. */
-export interface SupportlyQueueStub {
+/** Queue stub shape before the embed shell replaces `window.Sapportly`. */
+export interface SapportlyQueueStub {
   q: Array<{ m: string; a?: unknown[] }>;
 }
 
-export type SupportlyGlobal = SupportlyClient | SupportlyQueueStub;
+export type SapportlyGlobal = SapportlyClient | SapportlyQueueStub;
 
-export function isSupportlyClient(value: SupportlyGlobal | undefined): value is SupportlyClient {
-  return Boolean(value && typeof (value as SupportlyClient).boot === "function");
+export function isSapportlyClient(value: SapportlyGlobal | undefined): value is SapportlyClient {
+  return Boolean(value && typeof (value as SapportlyClient).boot === "function");
 }
 
 /** Track custom analytics via the embed shell (`widget.custom` under the hood). */
-export type SupportlyTrackHandler = (
+export type SapportlyTrackHandler = (
   name: string,
   properties?: Record<string, unknown>,
 ) => void;
@@ -93,7 +93,7 @@ export type { WidgetAnalyticsEventId };
 
 declare global {
   interface Window {
-    Supportly?: SupportlyGlobal;
+    Sapportly?: SapportlyGlobal;
     __supportlyOnEvent?: (name: string, detailJson?: string) => void;
   }
 }

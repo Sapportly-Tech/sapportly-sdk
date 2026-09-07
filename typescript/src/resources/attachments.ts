@@ -1,4 +1,4 @@
-import { SupportlyError, SupportlyValidationError } from "../errors";
+import { SapportlyError, SapportlyValidationError } from "../errors";
 import type { RequestOptions, Transport } from "../transport";
 import type {
   Attachment,
@@ -107,7 +107,7 @@ export class AttachmentsResource {
     });
 
     if (!response.ok) {
-      throw new SupportlyError(`attachment download failed with HTTP ${response.status}`, {
+      throw new SapportlyError(`attachment download failed with HTTP ${response.status}`, {
         status: response.status,
         headers: response.headers,
         method: "GET",
@@ -135,7 +135,7 @@ export class AttachmentsResource {
   async upload(params: UploadParams, options?: RequestOptions): Promise<Attachment> {
     const size = contentLength(params.content);
     if (size === 0) {
-      throw new SupportlyValidationError("cannot upload an empty file");
+      throw new SapportlyValidationError("cannot upload an empty file");
     }
 
     const intent = await this.createUploadIntent(
@@ -159,7 +159,7 @@ export class AttachmentsResource {
     });
 
     if (!put.ok) {
-      throw new SupportlyError(`presigned upload failed with HTTP ${put.status}`, {
+      throw new SapportlyError(`presigned upload failed with HTTP ${put.status}`, {
         status: put.status,
         url: intent.upload_url,
         method: "PUT",

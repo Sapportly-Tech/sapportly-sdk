@@ -1,4 +1,4 @@
-import type { SupportlyLoaderOptions } from "./types";
+import type { SapportlyLoaderOptions } from "./types";
 
 /** Common env var names for the public widget Site ID (`wgt_…`). */
 export const DEFAULT_SITE_ID_ENV_KEYS = [
@@ -42,10 +42,10 @@ function readEnvRecord(): Record<string, string | undefined> | undefined {
 
 /** Merge partial loader options with a required Site ID. */
 export function createLoaderOptions(
-  siteIdOrOptions: string | SupportlyLoaderOptions,
-  overrides?: Partial<SupportlyLoaderOptions>,
-): SupportlyLoaderOptions {
-  const base: SupportlyLoaderOptions =
+  siteIdOrOptions: string | SapportlyLoaderOptions,
+  overrides?: Partial<SapportlyLoaderOptions>,
+): SapportlyLoaderOptions {
+  const base: SapportlyLoaderOptions =
     typeof siteIdOrOptions === "string"
       ? { siteId: siteIdOrOptions }
       : siteIdOrOptions;
@@ -54,7 +54,7 @@ export function createLoaderOptions(
 }
 
 export interface LoaderOptionsFromEnvOptions
-  extends Partial<SupportlyLoaderOptions>,
+  extends Partial<SapportlyLoaderOptions>,
     ResolveSiteIdOptions {}
 
 /**
@@ -63,12 +63,12 @@ export interface LoaderOptionsFromEnvOptions
  */
 export function loaderOptionsFromEnv(
   options: LoaderOptionsFromEnvOptions = {},
-): SupportlyLoaderOptions {
+): SapportlyLoaderOptions {
   const { siteId: explicit, envKeys, ...rest } = options;
   const siteId = resolveSiteId({ siteId: explicit, envKeys });
   if (!siteId) {
     throw new Error(
-      `Supportly Site ID is required. Pass siteId or set one of: ${(envKeys ?? DEFAULT_SITE_ID_ENV_KEYS).join(", ")}`,
+      `Sapportly Site ID is required. Pass siteId or set one of: ${(envKeys ?? DEFAULT_SITE_ID_ENV_KEYS).join(", ")}`,
     );
   }
   return createLoaderOptions(siteId, rest);

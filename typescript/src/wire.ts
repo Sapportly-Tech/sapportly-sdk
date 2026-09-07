@@ -11,6 +11,7 @@ import type { WsWireEvent } from "./types";
 export interface MessageDeliveredPayload {
   type?: "message.delivered";
   message_id?: string;
+  idempotency_key?: string;
   correlation_id?: string;
   role?: "visitor" | "agent" | "assistant" | "system" | (string & {});
   channel?: string;
@@ -38,6 +39,7 @@ export interface AiDraftPayload {
   delta?: string | null;
   trigger_preview?: string | null;
   rag_sources?: unknown;
+  unverified?: boolean;
 }
 
 export type WireKind = "message" | "ai.draft" | "other";
@@ -156,7 +158,7 @@ function senderBucket(role: string | undefined): "visitor" | "agent" | "other" {
 
 /**
  * Node 18/20 have no global `WebSocket`. Node 22+, Bun, Deno and browsers do.
- * Pass the result as `WebSocket:` to {@link SupportlyRealtime} / Inbox.
+ * Pass the result as `WebSocket:` to {@link SapportlyRealtime} / Inbox.
  */
 export function nodeWebSocketFactory(): (url: string) => WebSocket {
   const ctor = (globalThis as { WebSocket?: typeof WebSocket }).WebSocket;

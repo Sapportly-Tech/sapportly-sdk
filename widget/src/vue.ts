@@ -1,40 +1,40 @@
 import { defineComponent, onMounted, onUnmounted, ref, type Ref } from "vue";
-import { getSupportly, loadSupportly } from "./loader";
+import { getSapportly, loadSapportly } from "./loader";
 import { loaderOptionsFromEnv, type LoaderOptionsFromEnvOptions } from "./options";
 import type {
-  SupportlyClient,
-  SupportlyIdentifyTraits,
-  SupportlyLoaderOptions,
+  SapportlyClient,
+  SapportlyIdentifyTraits,
+  SapportlyLoaderOptions,
 } from "./types";
 
-export interface UseSupportlyOptions extends SupportlyLoaderOptions {
+export interface UseSapportlyOptions extends SapportlyLoaderOptions {
   destroyOnUnmount?: boolean;
   manual?: boolean;
 }
 
-export interface UseSupportlyReturn {
-  client: Ref<SupportlyClient | null>;
+export interface UseSapportlyReturn {
+  client: Ref<SapportlyClient | null>;
   ready: Ref<boolean>;
   error: Ref<Error | null>;
   open: () => Promise<void>;
   close: () => Promise<void>;
   toggle: () => Promise<void>;
   track: (name: string, properties?: Record<string, unknown>) => void;
-  identify: (traits?: SupportlyIdentifyTraits) => Promise<{ ok: boolean }>;
+  identify: (traits?: SapportlyIdentifyTraits) => Promise<{ ok: boolean }>;
 }
 
 /** Vue 3 composable — loads the widget and exposes the embed API. */
-export function useSupportly(options: UseSupportlyOptions): UseSupportlyReturn {
+export function useSapportly(options: UseSapportlyOptions): UseSapportlyReturn {
   const { destroyOnUnmount = false, manual = false, ...loaderOptions } = options;
 
-  const client = ref<SupportlyClient | null>(manual ? getSupportly() : null);
+  const client = ref<SapportlyClient | null>(manual ? getSapportly() : null);
   const ready = ref(false);
   const error = ref<Error | null>(null);
   let owned = false;
   let pollTimer: ReturnType<typeof setInterval> | undefined;
 
   onMounted(() => {
-    const attach = (instance: SupportlyClient) => {
+    const attach = (instance: SapportlyClient) => {
       client.value = instance;
       ready.value = true;
     };
@@ -44,13 +44,13 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyReturn {
     };
 
     if (manual) {
-      const existing = getSupportly();
+      const existing = getSapportly();
       if (existing) {
         existing.ready.then(() => attach(existing)).catch(fail);
         return;
       }
       pollTimer = setInterval(() => {
-        const live = getSupportly();
+        const live = getSapportly();
         if (live) {
           clearInterval(pollTimer);
           pollTimer = undefined;
@@ -61,7 +61,7 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyReturn {
     }
 
     owned = true;
-    loadSupportly(loaderOptions).then(attach).catch(fail);
+    loadSapportly(loaderOptions).then(attach).catch(fail);
   });
 
   onUnmounted(() => {
@@ -96,14 +96,14 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyReturn {
 }
 
 /** Vue composable — Site ID from prop or env (`VITE_SUPPORTLY_SITE_ID`, …). */
-export function useSupportlyFromEnv(
-  options: Omit<UseSupportlyOptions, "siteId"> & LoaderOptionsFromEnvOptions = {},
-): UseSupportlyReturn {
-  return useSupportly(loaderOptionsFromEnv(options));
+export function useSapportlyFromEnv(
+  options: Omit<UseSapportlyOptions, "siteId"> & LoaderOptionsFromEnvOptions = {},
+): UseSapportlyReturn {
+  return useSapportly(loaderOptionsFromEnv(options));
 }
 
-export const SupportlyWidget = defineComponent({
-  name: "SupportlyWidget",
+export const SapportlyWidget = defineComponent({
+  name: "SapportlyWidget",
   props: {
     siteId: { type: String, required: true },
     apiUrl: String,
@@ -118,10 +118,10 @@ export const SupportlyWidget = defineComponent({
   },
   emits: ["ready", "error"],
   setup(props, { emit }) {
-    let client: SupportlyClient | null = null;
+    let client: SapportlyClient | null = null;
 
     onMounted(() => {
-      const options: SupportlyLoaderOptions = {
+      const options: SapportlyLoaderOptions = {
         siteId: props.siteId,
         apiUrl: props.apiUrl,
         cdnUrl: props.cdnUrl,
@@ -133,7 +133,7 @@ export const SupportlyWidget = defineComponent({
         widgetCss: props.widgetCss,
       };
 
-      loadSupportly(options)
+      loadSapportly(options)
         .then((instance) => {
           client = instance;
           emit("ready", instance);
@@ -151,4 +151,4 @@ export const SupportlyWidget = defineComponent({
   },
 });
 
-export type { SupportlyClient, SupportlyIdentifyTraits, SupportlyLoaderOptions };
+export type { SapportlyClient, SapportlyIdentifyTraits, SapportlyLoaderOptions };

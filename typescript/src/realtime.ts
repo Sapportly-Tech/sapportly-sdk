@@ -8,9 +8,9 @@
  */
 
 import { conversationMatchesSource } from "./channels";
-import { SupportlyConfigError } from "./errors";
+import { SapportlyConfigError } from "./errors";
 import type { RealtimeResource } from "./resources/realtime";
-import { websocketUrl } from "./resources/realtime";
+import { assertTrustedWebsocketUrl, websocketUrl } from "./resources/realtime";
 import type { WsWireEvent } from "./types";
 import { parseWireEvent } from "./wire";
 
@@ -52,6 +52,11 @@ export interface RealtimeOptions {
    * `custom:shop:{uuid}`. Кадры без канала проходят. Отброшенные видны в `onRaw`.
    */
   channels?: string[];
+  /**
+   * API base URL for `ws_url` host allowlisting (defaults from the ticket client
+   * when wired through {@link SapportlyInbox}).
+   */
+  trustedApiBaseUrl?: string;
 }
 
 const OPEN = 1;
@@ -62,12 +67,12 @@ function resolveFactory(options: RealtimeOptions): WebSocketFactory {
   const global = (globalThis as { WebSocket?: new (url: string) => WebSocketLike }).WebSocket;
   if (global) return (url) => new global(url);
 
-  throw new SupportlyConfigError(
+  throw new SapportlyConfigError(
     "no global WebSocket — pass `WebSocket` in the realtime options (e.g. the `ws` package on Node 18)",
   );
 }
 
-export class SupportlyRealtime {
+export class SapportlyRealtime {
   private readonly options: RealtimeOptions;
   private readonly factory: WebSocketFactory;
   private socket?: WebSocketLike;
@@ -146,7 +151,7 @@ export class SupportlyRealtime {
   /** Sends a raw frame. Throws when the socket is not open. */
   send(data: string): void {
     if (!this.socket || this.socket.readyState !== OPEN) {
-      throw new SupportlyConfigError("realtime socket is not open");
+      throw new SapportlyConfigError("realtime socket is not open");
     }
     this.socket.send(data);
   }
@@ -161,6 +166,14 @@ export class SupportlyRealtime {
     this.setState(this.attempts === 0 ? "connecting" : "reconnecting");
 
     const { ticket, ws_url } = await this.options.tickets.createTicket();
+    if (this.options.trustedApiBaseUrl) {
+      try {
+        assertTrustedWebsocketUrl(ws_url, this.options.trustedApiBaseUrl);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "untrusted ws_url";
+        throw new SapportlyConfigError(message);
+      }
+    }
     const socket = this.factory(websocketUrl(ws_url, ticket));
     this.socket = socket;
 

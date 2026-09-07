@@ -2,25 +2,25 @@
 
 [![npm](https://img.shields.io/npm/v/@sapportly/sdk.svg)](https://www.npmjs.com/package/@sapportly/sdk)
 [![npm](https://img.shields.io/npm/v/@sapportly/widget-sdk.svg)](https://www.npmjs.com/package/@sapportly/widget-sdk)
-[![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 
 Публичный репозиторий двух пакетов npm (org **sapportly**):
 
 | Пакет | Каталог | Назначение |
 |-------|---------|------------|
-| **[`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk)** | [`typescript/`](typescript/) | REST-клиент публичного API Supportly |
+| **[`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk)** | [`typescript/`](typescript/) | REST-клиент публичного API Sapportly |
 | **[`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk)** | [`widget/`](widget/) | Embed виджета (Site ID, React/Vue/Next/Svelte) |
 
-**Имена на npm — `@sapportly/sdk` и `@sapportly/widget-sdk`, не `@supportly/*`.** Продукт, хост API (`api.supportly.cc`), классы (`SupportlyClient`) и `window.Supportly` — Supportly. Scope и организация `supportly` на npm для этих SDK недоступны. `@supportly/api` — внутренний пакет монорепо, на npm не публикуется.
+**Имена на npm — `@sapportly/sdk` и `@sapportly/widget-sdk`, не `@supportly/*`.** Продукт, хост API (`api.sapportly.pro`), классы (`SapportlyClient`) и `window.Sapportly` — Sapportly. Scope и организация `supportly` на npm для этих SDK недоступны. `@sapportly/api` — внутренний пакет монорепо, на npm не публикуется.
 
-**GitHub (клонировать в GitHub Desktop):** https://github.com/Supportly-Tech/supportly-sdk
+**GitHub (клонировать в GitHub Desktop):** https://github.com/Sapportly-Tech/supportly-sdk
 
 ```bash
 npm install @sapportly/sdk
 npm install @sapportly/widget-sdk
 ```
 
-Документация: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript), [гайд по виджету](https://docs.supportly.cc/docs/guides/widget). С **1.3.0** REST SDK custom-каналы дают треды 1:1 (`custom:shop:{uuid}`) из `identity.external_id`. Виджет по-прежнему живёт на ленте `widget:{uuid}`.
+Документация: [docs.sapportly.pro/docs/sdk/typescript](https://docs.sapportly.pro/docs/sdk/typescript), [гайд по виджету](https://docs.sapportly.pro/docs/guides/widget). С **1.3.0** REST SDK custom-каналы дают треды 1:1 (`custom:shop:{uuid}`) из `identity.external_id`. Виджет по-прежнему живёт на ленте `widget:{uuid}`.
 
 **TypeScript is the single supported reference SDK.** For every other language,
 generate a client from the OpenAPI spec — see [below](#generating-a-client-for-another-language).
@@ -39,9 +39,9 @@ OpenAPI instead.
 
 | What | Where |
 |------|-------|
-| OpenAPI 3.1 spec | [docs.supportly.cc/openapi.json](https://docs.supportly.cc/openapi.json) |
+| OpenAPI 3.1 spec | [docs.sapportly.pro/openapi.json](https://docs.sapportly.pro/openapi.json) |
 | SDK behaviour contract | [`SPEC.md`](SPEC.md) |
-| API reference | [docs.supportly.cc/docs/api/reference](https://docs.supportly.cc/docs/api/reference) |
+| API reference | [docs.sapportly.pro/docs/api/reference](https://docs.sapportly.pro/docs/api/reference) |
 | Publishing | [`PUBLISHING.md`](PUBLISHING.md) |
 
 `SPEC.md` describes the behaviour a client needs beyond the endpoint list —
@@ -53,9 +53,9 @@ tells you what a good client does with them.
 
 | Surface | Host | Credential | In SDK scope |
 |---------|------|------------|--------------|
-| Public API | `api.supportly.cc` | API key `sk_live_…` with scopes | Yes |
-| Widget (visitor) | `api.supportly.cc` | Visitor token (`X-Visitor-Token`) | Yes |
-| Platform / panel | `app.supportly.cc` | Panel JWT + `panel_gate` + RBAC | **No** |
+| Public API | `api.sapportly.pro` | API key `sk_live_…` with scopes | Yes |
+| Widget (visitor) | `api.sapportly.pro` | Visitor token (`X-Visitor-Token`) | Yes |
+| Platform / panel | `app.sapportly.pro` | Panel JWT + `panel_gate` + RBAC | **No** |
 
 Panel endpoints (login, API-key management, webhook configuration, billing,
 team administration) are deliberately absent from the SDK and from the OpenAPI
@@ -97,21 +97,21 @@ The spec is OpenAPI 3.1. Both of the common generators work:
 ```bash
 # openapi-generator — widest language coverage
 npx @openapitools/openapi-generator-cli generate \
-  -i https://docs.supportly.cc/openapi.json \
+  -i https://docs.sapportly.pro/openapi.json \
   -g python \
   -o ./supportly-python
 
 # oapi-codegen — idiomatic Go
 oapi-codegen -package supportly \
   -generate types,client \
-  https://docs.supportly.cc/openapi.json > supportly.go
+  https://docs.sapportly.pro/openapi.json > supportly.go
 ```
 
 Generated code covers request and response shapes. Add these four things by
 hand — they are behaviour, not schema, and no generator infers them:
 
 1. **Webhook signature verification.** HMAC-SHA256 over `"{timestamp}.{body}"`,
-   headers `X-Supportly-Timestamp` and `X-Supportly-Signature`
+   headers `X-Sapportly-Timestamp` and `X-Sapportly-Signature`
    (`sha256=<hex>`), 300-second tolerance, constant-time comparison. The
    reference implementation is [`typescript/src/webhooks.ts`](typescript/src/webhooks.ts).
 2. **Idempotency.** Generate an `idempotency_key` for every message write so a
@@ -145,15 +145,15 @@ MIT. See [`LICENSE`](LICENSE).
 
 Это **Sapportly SDK**: на npm пакеты **`@sapportly/sdk`** (REST) и **`@sapportly/widget-sdk`** (embed), не `@supportly/*`.
 Scope `supportly` для этих SDK недоступен; org npm — **sapportly**. Продукт и API —
-Supportly (`api.supportly.cc`, классы `SupportlyClient`, Site ID `wgt_…`).
+Sapportly (`api.sapportly.pro`, классы `SapportlyClient`, Site ID `wgt_…`).
 
 TypeScript — единственный поддерживаемый SDK. Остальные восемь клиентов
 переведены в архив: удалены из рабочего дерева, история git сохранена.
 
 Для любого другого языка сгенерируйте клиент из
-[OpenAPI-спеки](https://docs.supportly.cc/openapi.json) и допишите четыре вещи
+[OpenAPI-спеки](https://docs.sapportly.pro/openapi.json) и допишите четыре вещи
 вручную: проверку подписи webhook, идемпотентность, ретраи с backoff и keyset-
 пагинацию. Что именно должен делать клиент — в [`SPEC.md`](SPEC.md), рабочий
 пример — в [`typescript/src`](typescript/src).
 
-Панель оператора (`app.supportly.cc`) в публичный API не входит.
+Панель оператора (`app.sapportly.pro`) в публичный API не входит.

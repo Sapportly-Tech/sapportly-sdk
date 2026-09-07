@@ -1,5 +1,5 @@
 import { generateIdempotencyKey } from "../idempotency";
-import { paginatePages, type PaginationLimits } from "../pagination";
+import { paginatePages, type ListPage, type PaginationLimits } from "../pagination";
 import type { RequestOptions, Transport } from "../transport";
 import type {
   Message,
@@ -106,6 +106,8 @@ export class WidgetResource {
   /**
    * One page of the visitor's history, oldest first within the page. Pages
    * backwards in time via `before_at` / `before_id` / `before_sequence`.
+   * Envelope unwrapped — no `has_more`. Prefer {@link historyPage} /
+   * {@link iterateHistoryPages} for pagination.
    */
   history(
     visitorToken: string,
@@ -162,6 +164,28 @@ export class WidgetResource {
     });
   }
 
+  /** Same as {@link history}, preserving list envelope metadata (P-08). */
+  historyPage(
+    visitorToken: string,
+    params: WidgetHistoryParams,
+    options?: RequestOptions,
+  ): Promise<ListPage<Message>> {
+    return this.transport.requestListPage<Message>({
+      method: "GET",
+      path: "/v1/widget/messages",
+      auth: "none",
+      visitorToken,
+      query: {
+        visitor_id: params.visitor_id,
+        limit: params.limit ?? DEFAULT_HISTORY_LIMIT,
+        before_at: params.before_at,
+        before_id: params.before_id,
+        before_sequence: params.before_sequence,
+      },
+      options,
+    });
+  }
+
   /** Walks the visitor's history backwards in time, newest page first. */
   iterateHistoryPages(
     visitorToken: string,
@@ -173,7 +197,7 @@ export class WidgetResource {
       limit,
       maxItems: params.maxItems,
       maxPages: params.maxPages,
-      fetchPage: (cursor) => this.history(visitorToken, { ...params, limit, ...cursor }, options),
+      fetchPage: (cursor) => this.historyPage(visitorToken, { ...params, limit, ...cursor }, options),
       cursorFrom: (page) => {
         const oldest = page[0];
         return oldest
@@ -184,6 +208,7 @@ export class WidgetResource {
             }
           : undefined;
       },
+      cursorFromEnvelope: (next) => widgetHistoryCursorFromEnvelope(next),
     });
   }
 
@@ -284,4 +309,16 @@ export class WidgetResource {
       options,
     });
   }
+}
+
+function widgetHistoryCursorFromEnvelope(next: unknown): WidgetHistoryCursor | undefined {
+  if (!next || typeof next !== "object") return undefined;
+  const c = next as Record<string, unknown>;
+  if (typeof c.before_at !== "string" || typeof c.before_id !== "string") return undefined;
+  const seq = c.before_sequence;
+  return {
+    before_at: c.before_at,
+    before_id: c.before_id,
+    before_sequence: typeof seq === "number" ? seq : null,
+  };
 }

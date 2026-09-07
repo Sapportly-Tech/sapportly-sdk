@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { SupportlyClient } from "../src/client";
+import { SapportlyClient } from "../src/client";
 import { collect, paginate, paginatePages } from "../src/pagination";
 import { mockFetch, type StubResponse } from "./helpers";
 
@@ -103,7 +103,7 @@ describe("conversations.iterate", () => {
       { body: { data: full, has_more: true, next_cursor: { before_at: full[49]!.last_at, before_channel: "custom:49" } } },
       { body: { data: [conversation("custom:last", "2026-07-29T00:00:00Z")], has_more: false } },
     ]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     const items = await collect(client.conversations.iterate());
     expect(items).toHaveLength(51);
@@ -116,7 +116,7 @@ describe("conversations.iterate", () => {
   it("passes the search query through to every page", async () => {
     const page = Array.from({ length: 2 }, (_, i) => conversation(`custom:${i}`, "2026-07-30T10:00:00Z"));
     const mock = mockFetch([{ body: page }, { body: [] }]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     await collect(client.conversations.iterate({ limit: 2, q: "refund" }));
     expect(new URL(mock.requests[1]!.url).searchParams.get("q")).toBe("refund");
@@ -124,7 +124,7 @@ describe("conversations.iterate", () => {
 
   it("makes exactly one request when the first page is short", async () => {
     const mock = mockFetch([{ body: [conversation("custom:a", "2026-07-30T10:00:00Z")] }]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     await collect(client.conversations.iterate());
     expect(mock.calls).toBe(1);
@@ -141,7 +141,7 @@ describe("conversations.iterateMessages", () => {
     const second = [message("m1", "2026-07-30T12:01:00Z", 1)];
 
     const mock = mockFetch([{ body: first }, { body: second }]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     const items = await collect(client.conversations.iterateMessages("widget:abc", { limit: 3 }));
     expect(items.map((m) => m.id)).toEqual(["m3", "m4", "m5", "m1"]);
@@ -160,7 +160,7 @@ describe("conversations.iterateMessages", () => {
       { id: "m3", created_at: "2026-07-30T12:03:00Z", channel_sequence: null, body: "c" },
     ];
     const mock = mockFetch([{ body: first }, { body: [] }]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     await collect(client.conversations.iterateMessages("widget:abc", { limit: 2 }));
     expect(new URL(mock.requests[1]!.url).searchParams.has("before_channel_sequence")).toBe(false);
@@ -172,7 +172,7 @@ describe("conversations.iterateMessages", () => {
       { body: [] },
     ];
     const mock = mockFetch(responses);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     const pages = await collect(
       client.conversations.iterateMessagePages("widget:abc", { limit: 2 }),
@@ -186,7 +186,7 @@ describe("conversations.iterateMessages", () => {
       message(`m${i}`, `2026-07-30T12:0${i}:00Z`, i),
     );
     const mock = mockFetch([{ body: page }]);
-    const client = new SupportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
+    const client = new SapportlyClient({ apiKey: "sk", fetch: mock.fetch, sleep: mock.sleep });
 
     const items = await collect(
       client.conversations.iterateMessages("widget:abc", { limit: 2, maxItems: 3 }),

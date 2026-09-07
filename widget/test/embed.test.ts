@@ -53,7 +53,7 @@ describe("package metadata", () => {
     expect(pkg.name).toBe("@sapportly/widget-sdk");
     expect(pkg.publishConfig?.access).toBe("public");
     expect(pkg.exports?.["./api"]).toBeUndefined();
-    expect(pkg.peerDependencies).not.toHaveProperty("@supportly/api");
+    expect(pkg.peerDependencies).not.toHaveProperty("@sapportly/api");
     expect(pkg.peerDependencies).not.toHaveProperty("@sapportly/sdk");
   });
 
@@ -68,10 +68,10 @@ describe("snippet", () => {
   it("собирает HTML со Site ID и cache-bust WASM", () => {
     const html = buildEmbedSnippet({ siteId: "wgt_abc" });
     expect(html).toContain('data-site-id="wgt_abc"');
-    expect(html).toContain("https://cdn.supportly.cc/supportly.widget.js");
+    expect(html).toContain("https://cdn.sapportly.pro/supportly.widget.js");
     expect(html).toContain(`v=${WIDGET_WASM_ASSET_VERSION}`);
-    expect(html).toContain("window.Supportly=window.Supportly||{q:[]}");
-    expect(html).toContain("https://api.supportly.cc");
+    expect(html).toContain("window.Sapportly=window.Sapportly||{q:[]}");
+    expect(html).toContain("https://api.sapportly.pro");
   });
 
   it("экранирует HTML в атрибутах", () => {
@@ -83,7 +83,7 @@ describe("snippet", () => {
 
   it("buildScriptUrl использует CDN и версию", () => {
     expect(buildScriptUrl({})).toBe(
-      `https://cdn.supportly.cc/supportly.widget.js?v=${WIDGET_WASM_ASSET_VERSION}`,
+      `https://cdn.sapportly.pro/supportly.widget.js?v=${WIDGET_WASM_ASSET_VERSION}`,
     );
     expect(buildScriptUrl({ cdnUrl: "https://cdn.example/", version: "abc" })).toBe(
       "https://cdn.example/supportly.widget.js?v=abc",
@@ -125,8 +125,8 @@ describe("options", () => {
 
 describe("loader key", () => {
   it("стабилен для одинаковых опций", () => {
-    const a = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.supportly.cc" });
-    const b = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.supportly.cc" });
+    const a = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.sapportly.pro" });
+    const b = supportlyLoaderKey({ siteId: "wgt_1", apiUrl: "https://api.sapportly.pro" });
     expect(a).toBe(b);
     expect(supportlyLoaderKey({ siteId: "wgt_2" })).not.toBe(a);
   });

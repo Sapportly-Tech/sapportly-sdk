@@ -1,17 +1,17 @@
 # Публикация Sapportly SDK
 
-Два пакета npm в org **sapportly**. Продукт и API при этом Supportly.
+Два пакета npm в org **sapportly**. Продукт и API при этом Sapportly.
 
 | Пакет | Каталог | Тег | Workflow |
 |-------|---------|-----|----------|
 | **`@sapportly/sdk`** | `typescript/` | `vX.Y.Z` | [`publish.yml`](.github/workflows/publish.yml) |
 | **`@sapportly/widget-sdk`** | `widget/` | `widget-vX.Y.Z` | [`publish-widget.yml`](.github/workflows/publish-widget.yml) |
 
-Канонический публичный репозиторий: **https://github.com/Supportly-Tech/supportly-sdk**
+Канонический публичный репозиторий: **https://github.com/Sapportly-Tech/supportly-sdk**
 
-В монорепо Supportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу.
+В монорепо Sapportly те же файлы лежат в `sdks/`. Релизы npm идут **из публичного репозитория** по git-тегу.
 
-Имён `@supportly/sdk` и `@supportly/widget-sdk` на npm нет: scope `supportly` для публичных SDK недоступен.
+Имён `@sapportly/sdk` и `@sapportly/widget-sdk` на npm нет: scope `supportly` для публичных SDK недоступен.
 
 ## Semver (`@sapportly/sdk`)
 
@@ -36,7 +36,7 @@ legacy-ingest без identity не ломается.
 | Новая обёртка / совместимое поле | `minor` |
 | Багфикс, типы, доки, актуальный WASM hash | `patch` |
 
-Первая публичная версия — **1.2.0** (тот же surface, что был внутренним `@supportly/widget-sdk`, без экспорта `./api`).
+Первая публичная версия — **1.2.0** (тот же surface, что был внутренним `@sapportly/widget-sdk`, без экспорта `./api`).
 
 Теги `v*` и `widget-v*` **нельзя** смешивать: `v1.2.0` публикует REST SDK и сверится с `typescript/package.json` (сейчас 1.3.0).
 
@@ -103,8 +103,39 @@ cd widget
 pnpm install
 pnpm test
 pnpm build
-pnpm publish --access public
+npm login
+npm whoami
+npm publish --access public
 ```
+
+Если CLI спросит OTP — `npm publish --access public --otp=123456`.
+
+#### `E404` на первый `PUT` (`@sapportly/widget-sdk` ещё нет)
+
+Это **не** «пакет не собран». npm отвечает 404, когда текущие credentials не могут **создать** новое имя в org. Частые причины:
+
+1. В `~/.npmrc` лежит **granular-токен**, выписанный только на `@sapportly/sdk`. Он не умеет заводить второй пакет.
+2. Аккаунт не Owner org **sapportly** (или команда без права создавать пакеты).
+3. Токен без **Bypass 2FA**, а аккаунт требует 2FA на publish.
+
+Что делать:
+
+1. [npmjs.com/org/sapportly](https://www.npmjs.com/org/sapportly) → Members: ваш логин — **Owner**.
+2. Не публиковать GAT, привязанным к одному пакету. Либо `npm login` (браузер), либо новый granular token:
+   - Permission: **Read and write**
+   - **Packages and scopes:** scope `@sapportly` (не только пакет `@sapportly/sdk`)
+   - **Bypass 2FA:** включить, либо всегда передавать `--otp`
+   - Срок: несколько дней, потом отозвать
+3. Снова:
+
+   ```bash
+   npm login
+   npm whoami
+   cd widget
+   npm publish --access public --otp=XXXXXX
+   ```
+
+После того как пакет появился на npm — Trusted Publisher (`publish-widget.yml`), токен из `.npmrc` удалить. Дальше только тег `widget-vX.Y.Z`.
 
 ## Первый раз: npm Trusted Publishing (без токена)
 
@@ -125,7 +156,7 @@ Trusted Publisher настраивается **на каждый пакет от
    Provenance с ноутбука не генерируется (`provider: null`). В CI его делает Trusted Publishing.
 
 3. На странице пакета: **Settings → Trusted Publisher → GitHub Actions**:
-   - Organization or user: `Supportly-Tech`
+   - Organization or user: `Sapportly-Tech`
    - Repository: `supportly-sdk`
    - Workflow filename: `publish.yml` для `@sapportly/sdk`, **`publish-widget.yml`** для `@sapportly/widget-sdk` (только имя файла)
    - Allowed actions: **npm publish**
@@ -144,7 +175,7 @@ cd typescript && pnpm build && pnpm pack --dry-run
 cd ../widget && pnpm build && pnpm pack --dry-run
 ```
 
-У `@sapportly/widget-sdk` в tarball **не** должно быть зависимости на `@supportly/api` и экспорта `./api`. Headless REST — `@sapportly/sdk`.
+У `@sapportly/widget-sdk` в tarball **не** должно быть зависимости на `@sapportly/api` и экспорта `./api`. Headless REST — `@sapportly/sdk`.
 
 ## После релиза
 

@@ -1,5 +1,5 @@
 import { DEFAULT_API_URL, DEFAULT_CDN_URL, WIDGET_SDK_VERSION, WIDGET_WASM_ASSET_VERSION } from "./constants";
-import type { SupportlyLoaderOptions } from "./types";
+import type { SapportlyLoaderOptions } from "./types";
 
 export interface BuildEmbedSnippetOptions {
   siteId: string;
@@ -30,8 +30,8 @@ export function buildEmbedSnippet(options: BuildEmbedSnippetOptions): string {
   if (options.widgetCss) attrs.push(`data-widget-css="${escapeHtmlAttr(options.widgetCss)}"`);
 
   return (
-    `<!-- Supportly Widget ${ver} -->\n` +
-    `<script>window.Supportly=window.Supportly||{q:[]};</script>\n` +
+    `<!-- Sapportly Widget ${ver} -->\n` +
+    `<script>window.Sapportly=window.Sapportly||{q:[]};</script>\n` +
     `<script\n  ${attrs.join("\n  ")}\n  async\n></script>`
   );
 }
@@ -47,14 +47,14 @@ function escapeHtmlAttr(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
-export function buildScriptUrl(options: Pick<SupportlyLoaderOptions, "cdnUrl" | "version">): string {
+export function buildScriptUrl(options: Pick<SapportlyLoaderOptions, "cdnUrl" | "version">): string {
   const cdn = (options.cdnUrl ?? DEFAULT_CDN_URL).replace(/\/$/, "");
   const ver = options.version ?? WIDGET_WASM_ASSET_VERSION;
   return `${cdn}/supportly.widget.js?v=${encodeURIComponent(ver)}`;
 }
 
 export function buildScriptAttributes(
-  options: SupportlyLoaderOptions,
+  options: SapportlyLoaderOptions,
 ): Record<string, string> {
   const attrs: Record<string, string> = {
     "data-site-id": options.siteId,

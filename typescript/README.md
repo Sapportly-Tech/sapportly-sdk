@@ -1,20 +1,21 @@
 # @sapportly/sdk
 
 [![npm](https://img.shields.io/npm/v/@sapportly/sdk.svg)](https://www.npmjs.com/package/@sapportly/sdk)
-[![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@sapportly/sdk.svg)](LICENSE)
 
-**This is the Sapportly TypeScript SDK** — the official client for the [Supportly](https://supportly.cc) public API.
+**This is the Sapportly TypeScript SDK** — the official client for the [Sapportly](https://sapportly.pro) public API.
 
 Install **`@sapportly/sdk`**. There is no `@supportly/sdk` on npm.
 
-The product, API host (`api.supportly.cc`), and classes (`SupportlyClient`, `SupportlyInbox`, …) remain **Supportly**. The npm scope and organization name `supportly` are not available for this SDK, so the package is published under the **sapportly** org. Do not confuse this with [`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk) (browser widget) or `@supportly/api` (internal monorepo package).
+The product, API host (`api.sapportly.pro`), and classes (`SapportlyClient`, `SapportlyInbox`, …) remain **Sapportly**. The npm scope and organization name `supportly` are not available for this SDK, so the package is published under the **sapportly** org. Do not confuse this with [`@sapportly/widget-sdk`](https://www.npmjs.com/package/@sapportly/widget-sdk) (browser widget) or `@sapportly/api` (internal monorepo package).
 
-Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-Tech/supportly-sdk) · Docs: [docs.supportly.cc/docs/sdk/typescript](https://docs.supportly.cc/docs/sdk/typescript)
+Source: [github.com/Sapportly-Tech/supportly-sdk](https://github.com/Sapportly-Tech/supportly-sdk) · Docs: [docs.sapportly.pro/docs/sdk/typescript](https://docs.sapportly.pro/docs/sdk/typescript)
 
 - **Runs anywhere `fetch` does** — Node 18+, Bun, Deno, Cloudflare Workers, browsers.
 - **No runtime dependencies.**
-- **Typed errors**, automatic retries with backoff, keyset pagination as async iterators.
+- **Typed errors**, automatic retries with backoff, keyset pagination as async iterators
+  (stops on envelope `has_more: false`, including full final pages).
 - **Webhook verification built in** — timestamped HMAC, constant-time compare.
 
 ```bash
@@ -27,9 +28,9 @@ Create an API key in the dashboard (Settings → API keys) with the
 `messages:write` scope. Keys are shown once.
 
 ```ts
-import { SupportlyClient } from "@sapportly/sdk";
+import { SapportlyClient } from "@sapportly/sdk";
 
-const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
+const client = new SapportlyClient({ apiKey: process.env.SAPPORTLY_API_KEY ?? process.env.SUPPORTLY_API_KEY! });
 
 const result = await client.ingest.send({
   channel: "custom:shop",
@@ -40,11 +41,12 @@ const result = await client.ingest.send({
 console.log(result.accepted); // true
 ```
 
-That is the whole happy path. `idempotency_key` is generated for you, so if the
+That is the whole happy path. `idempotency_key` is generated for you (CSPRNG;
+throws `SapportlyConfigError` if none is available — never a weak PRNG), so if the
 call is retried — by the SDK or by you — the platform recognises the duplicate
 and stores one message.
 
-`accepted: true` with `message_id: null` means the write was queued (HTTP 202).
+`accepted: true` with a stable `message_id` and `channel` means the write was queued (HTTP 202); persist is async.
 A populated `message_id` (HTTP 200) means the key matched an earlier write and
 nothing new was created.
 
@@ -79,9 +81,9 @@ await client.conversations.reply(accepted.channel!, { body: reply });
 ## Realtime inbox (bots / custom admin)
 
 ```ts
-import { SupportlyInbox } from "@sapportly/sdk/realtime";
+import { SapportlyInbox } from "@sapportly/sdk/realtime";
 
-const inbox = new SupportlyInbox(client, { channels: ["custom:shop"] });
+const inbox = new SapportlyInbox(client, { channels: ["custom:shop"] });
 inbox.onVisitor((m) => console.log("user", m.body));
 inbox.onAgent((m) => {
   if (m.echo) return; // свой reply — в CRM уже отправили
@@ -95,24 +97,120 @@ await inbox.reply("custom:shop", "Принято");
 Tickets are single-use; the wrapper mints a new one on every reconnect. Integrator
 guidebook (receive user messages, receive operator replies, send both directions,
 AI drafts vs auto-reply, catch-up pagination):
-https://docs.supportly.cc/docs/sdk/inbox
+https://docs.sapportly.pro/docs/sdk/inbox
+
+## Production recipe: custom channels (panel ↔ integrator)
+
+Оператор отвечает в панели (`app.sapportly.pro`) → платформа пишет в ленту → ваш процесс
+получает кадр и доставляет человеку во внешний канал. API host: `https://api.sapportly.pro`.
+
+### WS-only
+
+Держите долгоживущий процесс с `ws:connect` + `conversations:write`.
+
+```ts
+import { SapportlyClient } from "@sapportly/sdk";
+import { SapportlyInbox } from "@sapportly/sdk/realtime";
+
+const client = new SapportlyClient({ apiKey: process.env.SAPPORTLY_API_KEY ?? process.env.SUPPORTLY_API_KEY! });
+const inbox = new SapportlyInbox(client, { channels: ["custom:shop"] });
+
+inbox.onAgent(async (msg) => {
+  if (msg.echo) return; // свой inbox.reply — во внешний канал уже отправили
+  await deliverToCustomer(msg.externalId, msg.body); // ответ из панели
+});
+
+inbox.onStateChange((state) => {
+  if (state !== "open") return;
+  // Сокет интегратора НЕ реплеит историю. Persist only — не deliverToCustomer.
+  void inbox.catchUp({
+    // Defaults: maxConversationPages=3, maxMessagePages=1 — raise after long outages.
+    maxConversationPages: 20,
+    maxMessagePages: 5,
+    onMessage: (row) => persistLocally(row),
+  });
+});
+
+await inbox.connect();
+```
+
+### Webhooks-only
+
+HTTPS endpoint + secret. Слушайте `agent.reply` (исходящее) и `message.received` (входящее).
+Черновики ИИ (`ai.draft`) на webhooks **нет**.
+
+```ts
+import { verifyWebhook, extractMessageId, MessageDeduper } from "@sapportly/sdk";
+
+const deduper = new MessageDeduper(); // один процесс; на флоте — ExternalMessageSeenStore
+
+app.post("/hooks/sapportly", express.raw({ type: "application/json" }), async (req, res) => {
+  await verifyWebhook(process.env.SAPPORTLY_WEBHOOK_SECRET ?? process.env.SUPPORTLY_WEBHOOK_SECRET!, req.body, {
+    timestamp: req.header("X-Sapportly-Timestamp"),
+    signature: req.header("X-Sapportly-Signature"),
+  });
+  const event = JSON.parse(req.body.toString("utf8"));
+  const id = extractMessageId(event);
+  if (id && deduper.seen(id)) return res.sendStatus(204);
+  if (event.type === "agent.reply") {
+    void deliverToCustomer(/* external_id из data.payload */, /* body */);
+  }
+  res.sendStatus(204);
+});
+```
+
+### Both (WS + webhooks)
+
+Одинаковый `message_id` на обоих каналах. Обязателен общий store на флоте:
+
+```ts
+import { ExternalMessageSeenStore, SapportlyClient } from "@sapportly/sdk";
+import { SapportlyInbox } from "@sapportly/sdk/realtime";
+
+const seen = new ExternalMessageSeenStore({
+  async tryClaim(id, ttlMs) {
+    // Redis SET NX: true = duplicate (skip), false = first claim
+    const ok = await redis.set(`sapportly:seen:${id}`, "1", "PX", ttlMs, "NX");
+    return ok === null;
+  },
+});
+
+const inbox = new SapportlyInbox(client, { channels: ["custom:shop"], dedup: seen });
+```
+
+В webhook-хендлере вызывайте тот же `seen.claim(message_id)` перед `deliverToCustomer`.
+
+### Anti-dup checklist
+
+| Риск | Что делать |
+|------|------------|
+| WS + webhook twin | `message_id` + `MessageSeenStore` |
+| Свой `inbox.reply` | `onAgent` → `if (msg.echo) return` |
+| **Флот воркеров** | In-memory `MessageDeduper` и `echo` **не шарятся**. На ≥2 процессах нужен общий `ExternalMessageSeenStore` (Redis SET NX и т.п.). Reply на воркере A приходит на B как `echo: false` — без общего store будет повторная доставка человеку. |
+| Reconnect gap | `inbox.catchUp` / `catchUpInbox` — **persist**, не deliver |
+| Долгий даунтайм | Дефолты catch-up мелкие (`maxConversationPages=3`, `maxMessagePages=1`). Поднимите caps, иначе история обрежется; сокет историю не реплеит. |
+| `ai.draft` | не класть draft `message_id` в seen-set (Inbox уже так делает) |
+
+Env в примерах: канон `SAPPORTLY_API_KEY` / `SAPPORTLY_WEBHOOK_SECRET`; legacy alias `SUPPORTLY_*`. SDK **не** читает env сам — передайте `apiKey` в конструктор.
+
+Подробный гайд: https://docs.sapportly.pro/docs/sdk/inbox
 
 ## Receiving a webhook
 
 This is the part worth getting right. The platform signs
 `"{timestamp}.{body}"` with HMAC-SHA256 and sends
-`X-Supportly-Timestamp` plus `X-Supportly-Signature: sha256=<hex>`. Verification
+`X-Sapportly-Timestamp` plus `X-Sapportly-Signature: sha256=<hex>`. Verification
 must compare in constant time and reject anything older than 300 seconds, or a
 captured request stays replayable forever.
 
 ```ts
 import { verifyWebhook } from "@sapportly/sdk/webhooks";
 
-app.post("/hooks/supportly", express.raw({ type: "application/json" }), async (req, res) => {
+app.post("/hooks/sapportly", express.raw({ type: "application/json" }), async (req, res) => {
   try {
-    await verifyWebhook(process.env.SUPPORTLY_WEBHOOK_SECRET!, req.body, {
-      timestamp: req.header("X-Supportly-Timestamp"),
-      signature: req.header("X-Supportly-Signature"),
+    await verifyWebhook(process.env.SAPPORTLY_WEBHOOK_SECRET ?? process.env.SUPPORTLY_WEBHOOK_SECRET!, req.body, {
+      timestamp: req.header("X-Sapportly-Timestamp"),
+      signature: req.header("X-Sapportly-Signature"),
     });
   } catch {
     return res.sendStatus(401);
@@ -132,7 +230,7 @@ the body correctly for you:
 import { verifyWebhookRequest } from "@sapportly/sdk/webhooks";
 
 export async function POST(request: Request) {
-  const event = await verifyWebhookRequest(process.env.SUPPORTLY_WEBHOOK_SECRET!, request);
+  const event = await verifyWebhookRequest(process.env.SAPPORTLY_WEBHOOK_SECRET ?? process.env.SUPPORTLY_WEBHOOK_SECRET!, request);
   return new Response(null, { status: 204 });
 }
 ```
@@ -144,28 +242,28 @@ regardless.
 
 ## Handling errors
 
-Every failure is a subclass of `SupportlyError`, carrying `status`, `requestId`,
+Every failure is a subclass of `SapportlyError`, carrying `status`, `requestId`,
 `code`, `type`, `docsUrl`, the parsed `body`, and the number of `attempts` made.
 
 ```ts
 import {
-  SupportlyRateLimitError,
-  SupportlyPermissionError,
-  SupportlyValidationError,
-  SupportlyError,
+  SapportlyRateLimitError,
+  SapportlyPermissionError,
+  SapportlyValidationError,
+  SapportlyError,
 } from "@sapportly/sdk";
 
 try {
   await client.ingest.send({ channel: "custom:shop", body: "hi" });
 } catch (error) {
-  if (error instanceof SupportlyRateLimitError) {
+  if (error instanceof SapportlyRateLimitError) {
     // Already retried and still limited.
     console.warn(`retry in ${error.retryAfterMs}ms`);
-  } else if (error instanceof SupportlyPermissionError) {
+  } else if (error instanceof SapportlyPermissionError) {
     console.error("API key is missing a scope:", error.message);
-  } else if (error instanceof SupportlyValidationError) {
+  } else if (error instanceof SapportlyValidationError) {
     console.error("bad request:", error.body);
-  } else if (error instanceof SupportlyError) {
+  } else if (error instanceof SapportlyError) {
     console.error(`${error.name} ${error.status} (request ${error.requestId})`);
   }
 }
@@ -173,17 +271,17 @@ try {
 
 | Class | When |
 |-------|------|
-| `SupportlyConfigError` | Missing API key or no `fetch` — thrown before any request |
-| `SupportlyConnectionError` | Network failure |
-| `SupportlyTimeoutError` | Deadline elapsed, or the caller aborted (`error.aborted`) |
-| `SupportlyAuthError` | 401 — key invalid or revoked |
-| `SupportlyPermissionError` | 403 — key lacks the required scope |
-| `SupportlyNotFoundError` | 404 |
-| `SupportlyValidationError` | Other 4xx — bad payload |
-| `SupportlyPaymentRequiredError` | 402 — plan quota exhausted (`resource`, `used`, `limit`) |
-| `SupportlyPayloadTooLargeError` | 413 — body over 2 MiB |
-| `SupportlyRateLimitError` | 429 — includes `retryAfterMs` |
-| `SupportlyServerError` | 5xx |
+| `SapportlyConfigError` | Missing API key, no `fetch`, or no CSPRNG for auto `idempotency_key` |
+| `SapportlyConnectionError` | Network failure |
+| `SapportlyTimeoutError` | Deadline elapsed, or the caller aborted (`error.aborted`) |
+| `SapportlyAuthError` | 401 — key invalid or revoked |
+| `SapportlyPermissionError` | 403 — key lacks the required scope |
+| `SapportlyNotFoundError` | 404 |
+| `SapportlyValidationError` | Other 4xx — bad payload |
+| `SapportlyPaymentRequiredError` | 402 — plan quota exhausted (`resource`, `used`, `limit`) |
+| `SapportlyPayloadTooLargeError` | 413 — body over 2 MiB |
+| `SapportlyRateLimitError` | 429 — includes `retryAfterMs` |
+| `SapportlyServerError` | 5xx |
 
 ## Retries
 
@@ -196,8 +294,8 @@ Writes are only retried when a replay is provably safe — `ingest.send`,
 would duplicate work on replay, so they are never retried.
 
 ```ts
-const client = new SupportlyClient({
-  apiKey: process.env.SUPPORTLY_API_KEY!,
+const client = new SapportlyClient({
+  apiKey: process.env.SAPPORTLY_API_KEY ?? process.env.SUPPORTLY_API_KEY!,
   timeoutMs: 10_000,
   retry: { maxRetries: 4, initialDelayMs: 200, maxDelayMs: 10_000 },
 });
@@ -208,7 +306,10 @@ await client.conversations.list({}, { timeoutMs: 2_000, retry: { maxRetries: 0 }
 
 ## Pagination
 
-List endpoints use keyset cursors. The iterators handle the bookkeeping.
+List endpoints use keyset cursors. Prefer **`iterate` / `iterateMessagePages` /
+`listPage` / `messagesPage` / `historyPage`** — they honour envelope `has_more`.
+`list()` / `messages()` / `history()` return bare arrays (envelope unwrapped);
+do **not** DIY-loop while `page.length === limit` or a full final page loops forever.
 
 ```ts
 for await (const conversation of client.conversations.iterate({ limit: 100 })) {
@@ -231,9 +332,9 @@ Tickets are single-use and expire in about a minute, so the socket wrapper
 mints a fresh one on every connect and reconnect.
 
 ```ts
-import { SupportlyRealtime } from "@sapportly/sdk/realtime";
+import { SapportlyRealtime } from "@sapportly/sdk/realtime";
 
-const stream = new SupportlyRealtime({
+const stream = new SapportlyRealtime({
   tickets: client.realtime,
   // Node 18/20 have no global WebSocket:
   // WebSocket: (url) => new (require("ws").WebSocket)(url),
@@ -244,7 +345,11 @@ await stream.connect();
 ```
 
 If you consume both webhooks and the WebSocket, deduplicate on `message_id` —
-it is the only identifier stable across channels:
+it is the only identifier stable across channels. `SapportlyInbox` awaits claim
+before emit and serializes per id; fleet stores must use an **atomic** `tryClaim`
+(Redis `SET NX`). After a successful claim, handler errors go to `onError`
+(at-most-once — no auto-unclaim; fleet stores dead-letter). Empty webhook
+secrets are rejected:
 
 ```ts
 import { MessageDeduper, extractMessageId } from "@sapportly/sdk";
@@ -290,6 +395,8 @@ A key only reaches what its scopes allow; a missing scope is a 403.
 | `team:read` | `team.listRoles()` |
 | `analytics:write` | `analytics.track()` |
 | `ws:connect` | `realtime.createTicket()` |
+| `webhooks:read` | `webhooks.get()` (legacy: `conversations:read`) |
+| `webhooks:write` | `webhooks.update()` / `webhooks.test()` (legacy: `conversations:write`) |
 | `widget:embed:issue` | `widget.createEmbedSession()` |
 
 No scope is needed for `status()`, `health()`, `ready()`, or
@@ -298,14 +405,14 @@ No scope is needed for `status()`, `health()`, `ready()`, or
 ## Client surface
 
 ```
-SupportlyClient(options)
+SapportlyClient(options)
 ├── status() / health() / ready()
 ├── rateLimit                      last seen rate-limit headers
 ├── setApiKey(key)
 ├── ingest.send()
-├── conversations  list · iterate · messages · iterateMessages · iterateMessagePages
-│                  reply · getAssignment · assign · transfer · assignmentHistory
-├── contacts       list · get · upsert
+├── conversations  list · listPage · iterate · messages · messagesPage · iterateMessages · iterateMessagePages
+│                  reply · getAssignment · assign · transfer · assignmentHistory · assignmentHistoryPage
+├── contacts       list · listPage · get · upsert
 ├── channels       list · get · create · update · archive
 ├── attachments    upload · createUploadIntent · complete · get · download
 ├── webhooks       get · update · test
@@ -313,14 +420,15 @@ SupportlyClient(options)
 ├── team           listRoles
 ├── analytics      track
 ├── realtime       createTicket
-└── widget         createEmbedSession · bootstrap · sendMessage · history
+└── widget         createEmbedSession · bootstrap · sendMessage · history · historyPage · iterateHistoryPages
                    iterateHistoryPages · trackEvent · cannedPrompt · channelSecurity
+                   identify · listCapabilityConfirms · actCapabilityConfirm
 ```
 
 | Option | Default | Notes |
 |--------|---------|-------|
 | `apiKey` | — | Required for scoped endpoints |
-| `baseUrl` | `https://api.supportly.cc` | |
+| `baseUrl` | `https://api.sapportly.pro` | |
 | `timeoutMs` | `30000` | Per attempt; `0` disables |
 | `fetch` | global | Inject for proxies or tests |
 | `headers` | `{}` | Added to every request; cannot override `Authorization` |
@@ -344,13 +452,13 @@ mint a visitor session without exposing the API key to the browser.
 
 ## Out of scope: panel / dashboard API
 
-`@sapportly/sdk` covers **only** the public mass API on `api.supportly.cc`
+`@sapportly/sdk` covers **only** the public mass API on `api.sapportly.pro`
 (ingest, conversations, channels, widget embed, webhooks, attachments, WS
 tickets). It does **not** include:
 
 - Login, team invite, billing admin, knowledge base, panel AI, incidents admin
 - Flow rules, capabilities, analytics dashboards, API key management
-- Any route under `app.supportly.cc` / `/api/slc`
+- Any route under `app.sapportly.pro` / `/api/slc`
 
 Those live on `platform_surface` behind a panel session JWT and the internal
 OpenAPI at `packages/panel/openapi.json`. Use the dashboard UI or your own BFF;
@@ -363,7 +471,7 @@ are intentionally absent from this SDK and from `packages/api/openapi.json`.
 ## Development
 
 ```bash
-git clone https://github.com/Supportly-Tech/supportly-sdk.git
+git clone https://github.com/Sapportly-Tech/supportly-sdk.git
 cd supportly-sdk/typescript
 pnpm install
 pnpm test
@@ -371,7 +479,7 @@ pnpm typecheck
 pnpm build
 ```
 
-In the Supportly monorepo the same package is `sdks/typescript`:
+In the Sapportly monorepo the same package is `sdks/typescript`:
 
 ```bash
 pnpm --filter @sapportly/sdk test
@@ -379,7 +487,7 @@ pnpm --filter @sapportly/sdk typecheck
 pnpm --filter @sapportly/sdk build
 ```
 
-Releases are semver tags (`v1.3.0`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
+Releases are semver tags (`v1.4.3`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
 
 ## License
 

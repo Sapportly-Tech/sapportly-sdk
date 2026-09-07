@@ -5,21 +5,22 @@
  */
 
 import { generateIdempotencyKey } from "./idempotency";
-import { unwrapList } from "./pagination";
+import { parseListBody, unwrapList, type ListPage } from "./pagination";
+import { warnBareListOnce } from "./diy-list-warn";
 import {
-  SupportlyAuthError,
-  SupportlyConfigError,
-  SupportlyConnectionError,
-  SupportlyError,
-  type SupportlyErrorInit,
-  SupportlyNotFoundError,
-  SupportlyPayloadTooLargeError,
-  SupportlyPaymentRequiredError,
-  SupportlyPermissionError,
-  SupportlyRateLimitError,
-  SupportlyServerError,
-  SupportlyTimeoutError,
-  SupportlyValidationError,
+  SapportlyAuthError,
+  SapportlyConfigError,
+  SapportlyConnectionError,
+  SapportlyError,
+  type SapportlyErrorInit,
+  SapportlyNotFoundError,
+  SapportlyPayloadTooLargeError,
+  SapportlyPaymentRequiredError,
+  SapportlyPermissionError,
+  SapportlyRateLimitError,
+  SapportlyServerError,
+  SapportlyTimeoutError,
+  SapportlyValidationError,
 } from "./errors";
 import { DEFAULT_BASE_URL } from "./types";
 
@@ -63,7 +64,7 @@ export interface RetryOptions {
 export interface ClientOptions {
   /** Tenant API key (`sk_live_…`). Required for every scoped endpoint. */
   apiKey?: string;
-  /** Defaults to `https://api.supportly.cc`. */
+  /** Defaults to `https://api.sapportly.pro`. */
   baseUrl?: string;
   /** Per-attempt deadline in ms. Default 30 000. `0` disables it. */
   timeoutMs?: number;
@@ -104,10 +105,17 @@ interface InternalRequest {
   /** Writes are retried only when this is `true`. */
   idempotent?: boolean;
   /**
-   * Treat the JSON body as a list page: send `X-Supportly-List-Envelope: 1`
+   * Treat the JSON body as a list page: send `X-Sapportly-List-Envelope: 1`
    * and unwrap `{ data }` when the gateway returns an envelope.
+   * When `listEnvelope` is also set, the full {@link ListPage} is returned
+   * instead of a bare array (P-08).
    */
   asList?: boolean;
+  /**
+   * Like `asList`, but keep `has_more` / `next_cursor` for pagination.
+   * Implies the list-envelope header.
+   */
+  listEnvelope?: boolean;
 }
 
 function isFormBody(body: unknown): body is FormData {
@@ -215,15 +223,15 @@ function errorMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
-function mapStatusToError(status: number, message: string, init: SupportlyErrorInit): SupportlyError {
-  if (status === 401) return new SupportlyAuthError(message, init);
-  if (status === 403) return new SupportlyPermissionError(message, init);
-  if (status === 404) return new SupportlyNotFoundError(message, init);
-  if (status === 413) return new SupportlyPayloadTooLargeError(message, init);
+function mapStatusToError(status: number, message: string, init: SapportlyErrorInit): SapportlyError {
+  if (status === 401) return new SapportlyAuthError(message, init);
+  if (status === 403) return new SapportlyPermissionError(message, init);
+  if (status === 404) return new SapportlyNotFoundError(message, init);
+  if (status === 413) return new SapportlyPayloadTooLargeError(message, init);
 
   if (status === 402) {
     const body = init.body as { resource?: string; used?: number; limit?: number } | undefined;
-    return new SupportlyPaymentRequiredError(message, {
+    return new SapportlyPaymentRequiredError(message, {
       ...init,
       resource: body?.resource,
       used: body?.used,
@@ -232,16 +240,31 @@ function mapStatusToError(status: number, message: string, init: SupportlyErrorI
   }
 
   if (status === 429) {
-    return new SupportlyRateLimitError(message, {
+    return new SapportlyRateLimitError(message, {
       ...init,
       retryAfterMs: init.headers ? parseRetryAfter(init.headers.get("retry-after")) : undefined,
     });
   }
 
-  if (status >= 500) return new SupportlyServerError(message, init);
-  if (status >= 400) return new SupportlyValidationError(message, init);
+  if (status >= 500) return new SapportlyServerError(message, init);
+  if (status >= 400) return new SapportlyValidationError(message, init);
 
-  return new SupportlyError(message, init);
+  return new SapportlyError(message, init);
+}
+
+
+/** Drop caller Authorization / visitor token variants (any casing) before we set ours. */
+function stripSensitiveRequestHeaders(headers: Record<string, string>): void {
+  for (const key of Object.keys(headers)) {
+    const lower = key.toLowerCase();
+    if (
+      lower === "authorization" ||
+      lower === "proxy-authorization" ||
+      lower === "x-visitor-token"
+    ) {
+      delete headers[key];
+    }
+  }
 }
 
 function headerValue(headers: Record<string, string>, name: string): string | undefined {
@@ -332,7 +355,7 @@ export class Transport {
   constructor(options: ClientOptions = {}) {
     const fetchImpl = options.fetch ?? globalThis.fetch;
     if (typeof fetchImpl !== "function") {
-      throw new SupportlyConfigError(
+      throw new SapportlyConfigError(
         "no global fetch available — pass `fetch` in the client options (Node 18+ or a polyfill)",
       );
     }
@@ -347,8 +370,18 @@ export class Transport {
     this.apiKey = options.apiKey ?? "";
   }
 
+  /** Escape hatch for typed list pages that keep has_more / next_cursor. */
+  requestListPage<T>(req: Omit<InternalRequest, "listEnvelope" | "asList">): Promise<ListPage<T>> {
+    return this.request<ListPage<T>>({ ...req, listEnvelope: true });
+  }
+
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
+  }
+
+  /** Absolute API origin used for WebSocket host allowlisting. */
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 
   hasApiKey(): boolean {
@@ -361,7 +394,12 @@ export class Transport {
       ...req.options?.retry,
     };
 
-    const url = buildUrl(this.baseUrl, req.path, req.query);
+    const wantsList = Boolean(req.asList || req.listEnvelope);
+    const query =
+      wantsList && (req.query?.envelope === undefined || req.query?.envelope === null)
+        ? { ...req.query, envelope: true }
+        : req.query;
+    const url = buildUrl(this.baseUrl, req.path, query);
     const headers = this.buildHeaders(req);
     const body = encodeBody(req.body);
 
@@ -370,16 +408,16 @@ export class Transport {
     const replayable = req.method === "GET" || req.idempotent === true;
     const maxAttempts = replayable ? retry.maxRetries + 1 : 1;
 
-    let lastError: SupportlyError | undefined;
+    let lastError: SapportlyError | undefined;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const isLast = attempt === maxAttempts - 1;
 
-      let result: { value: T } | { error: SupportlyError };
+      let result: { value: T } | { error: SapportlyError };
       try {
         result = { value: await this.attempt<T>(req, url, headers, body, attempt + 1) };
       } catch (error) {
-        if (!(error instanceof SupportlyError)) throw error;
+        if (!(error instanceof SapportlyError)) throw error;
         result = { error };
       }
 
@@ -393,7 +431,7 @@ export class Transport {
       await this.sleep(delay);
     }
 
-    throw lastError ?? new SupportlyError("request failed", { method: req.method, url });
+    throw lastError ?? new SapportlyError("request failed", { method: req.method, url });
   }
 
   /**
@@ -416,11 +454,11 @@ export class Transport {
         signal,
       });
     } catch (error) {
-      const base: SupportlyErrorInit = { method: req.method, url, cause: error };
+      const base: SapportlyErrorInit = { method: req.method, url, cause: error };
       if (timedOut()) {
-        throw new SupportlyTimeoutError(`request timed out after ${timeoutMs}ms`, base);
+        throw new SapportlyTimeoutError(`request timed out after ${timeoutMs}ms`, base);
       }
-      throw new SupportlyConnectionError(
+      throw new SapportlyConnectionError(
         error instanceof Error ? error.message : "network error",
         base,
       );
@@ -434,7 +472,7 @@ export class Transport {
     try {
       return await this.fetchImpl(url, init);
     } catch (error) {
-      throw new SupportlyConnectionError(
+      throw new SapportlyConnectionError(
         error instanceof Error ? error.message : "network error",
         { url, cause: error },
       );
@@ -447,13 +485,18 @@ export class Transport {
       ...this.extraHeaders,
       ...req.options?.headers,
     };
+    // SPEC: caller cannot override auth — strip any casing of Authorization / X-Visitor-Token.
+    stripSensitiveRequestHeaders(headers);
 
     if (!headerValue(headers, "x-request-id")) {
       headers["X-Request-Id"] = generateIdempotencyKey();
     }
 
-    if (req.asList && !headerValue(headers, "x-supportly-list-envelope")) {
-      headers["X-Supportly-List-Envelope"] = "1";
+    if (
+      (req.asList || req.listEnvelope) &&
+      !headerValue(headers, "x-sapportly-list-envelope")
+    ) {
+      headers["X-Sapportly-List-Envelope"] = "1";
     }
 
     const bodyKey =
@@ -470,7 +513,7 @@ export class Transport {
 
     if (req.auth === "apiKey") {
       if (!this.apiKey) {
-        throw new SupportlyConfigError(
+        throw new SapportlyConfigError(
           `API key required for ${req.method} ${req.path} — pass \`apiKey\` to the client`,
         );
       }
@@ -501,7 +544,7 @@ export class Transport {
         signal,
       });
     } catch (error) {
-      const base: SupportlyErrorInit = {
+      const base: SapportlyErrorInit = {
         method: req.method,
         url,
         attempts: attemptNumber,
@@ -509,12 +552,12 @@ export class Transport {
       };
 
       if (timedOut()) {
-        throw new SupportlyTimeoutError(`request timed out after ${timeoutMs}ms`, base);
+        throw new SapportlyTimeoutError(`request timed out after ${timeoutMs}ms`, base);
       }
       if (req.options?.signal?.aborted) {
-        throw new SupportlyTimeoutError("request aborted by caller", { ...base, aborted: true });
+        throw new SapportlyTimeoutError("request aborted by caller", { ...base, aborted: true });
       }
-      throw new SupportlyConnectionError(
+      throw new SapportlyConnectionError(
         error instanceof Error ? error.message : "network error",
         base,
       );
@@ -545,26 +588,30 @@ export class Transport {
       );
     }
 
-    if (req.asList) return unwrapList(parsed) as T;
+    if (req.listEnvelope) return parseListBody(parsed) as T;
+    if (req.asList) {
+      warnBareListOnce(req.path);
+      return unwrapList(parsed) as T;
+    }
 
     return parsed as T;
   }
 
-  private shouldRetry(error: SupportlyError): boolean {
-    if (error instanceof SupportlyConfigError) return false;
-    if (error instanceof SupportlyTimeoutError) return !error.aborted;
-    if (error instanceof SupportlyConnectionError) return true;
+  private shouldRetry(error: SapportlyError): boolean {
+    if (error instanceof SapportlyConfigError) return false;
+    if (error instanceof SapportlyTimeoutError) return !error.aborted;
+    if (error instanceof SapportlyConnectionError) return true;
     return RETRYABLE_STATUS.has(error.status);
   }
 
   /** `undefined` means "do not retry" — used when `Retry-After` is too long. */
   private retryDelay(
-    error: SupportlyError,
+    error: SapportlyError,
     attempt: number,
     retry: Required<RetryOptions>,
   ): number | undefined {
     const hint =
-      error instanceof SupportlyRateLimitError
+      error instanceof SapportlyRateLimitError
         ? error.retryAfterMs
         : error.headers
           ? parseRetryAfter(error.headers.get("retry-after"))

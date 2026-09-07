@@ -1,8 +1,8 @@
 /**
  * `@sapportly/widget-sdk` — публичный embed SDK (vanilla / React / Vue / Next / Svelte).
  *
- * Имя на npm — `@sapportly/widget-sdk`, не `@supportly/widget-sdk`.
- * Продукт, Site ID (`wgt_…`) и глобал `window.Supportly` — Supportly.
+ * Имя на npm — `@sapportly/widget-sdk`, не `@sapportly/widget-sdk`.
+ * Продукт, Site ID (`wgt_…`) и глобал `window.Sapportly` — Sapportly.
  * Не путать с `@sapportly/sdk` (REST) и с panel JWT.
  */
 
@@ -36,24 +36,24 @@ export {
 export {
   isBrowser,
   injectQueueStub,
-  getSupportly,
-  waitForSupportly,
-  loadSupportly,
+  getSapportly,
+  waitForSapportly,
+  loadSapportly,
   installWidget,
-  installSupportly,
-  onSupportlyEvent,
+  installSapportly,
+  onSapportlyEvent,
   supportlyLoaderKey,
 } from "./loader";
 
 export type {
-  SupportlyClient,
-  SupportlyEvent,
-  SupportlyEventDetail,
-  SupportlyIdentifyTraits,
-  SupportlyLoaderOptions,
-  SupportlyGlobal,
-  SupportlyQueueStub,
-  SupportlyTrackHandler,
+  SapportlyClient,
+  SapportlyEvent,
+  SapportlyEventDetail,
+  SapportlyIdentifyTraits,
+  SapportlyLoaderOptions,
+  SapportlyGlobal,
+  SapportlyQueueStub,
+  SapportlyTrackHandler,
 } from "./types";
 
-export { isSupportlyClient } from "./types";
+export { isSapportlyClient } from "./types";

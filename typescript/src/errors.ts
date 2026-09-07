@@ -1,27 +1,27 @@
 /**
  * Typed error hierarchy.
  *
- * Every failure the SDK can produce is a {@link SupportlyError}. Callers
+ * Every failure the SDK can produce is a {@link SapportlyError}. Callers
  * discriminate with `instanceof` (or the `name` field, which survives bundling
  * and structured cloning) instead of matching on status codes by hand.
  */
 
 /** Machine-readable discriminator, stable across minified builds. */
-export type SupportlyErrorName =
-  | "SupportlyError"
-  | "SupportlyConfigError"
-  | "SupportlyConnectionError"
-  | "SupportlyTimeoutError"
-  | "SupportlyAuthError"
-  | "SupportlyPermissionError"
-  | "SupportlyNotFoundError"
-  | "SupportlyValidationError"
-  | "SupportlyPaymentRequiredError"
-  | "SupportlyPayloadTooLargeError"
-  | "SupportlyRateLimitError"
-  | "SupportlyServerError";
+export type SapportlyErrorName =
+  | "SapportlyError"
+  | "SapportlyConfigError"
+  | "SapportlyConnectionError"
+  | "SapportlyTimeoutError"
+  | "SapportlyAuthError"
+  | "SapportlyPermissionError"
+  | "SapportlyNotFoundError"
+  | "SapportlyValidationError"
+  | "SapportlyPaymentRequiredError"
+  | "SapportlyPayloadTooLargeError"
+  | "SapportlyRateLimitError"
+  | "SapportlyServerError";
 
-export interface SupportlyErrorInit {
+export interface SapportlyErrorInit {
   /** HTTP status. `0` when no response was received (config, network, abort). */
   status?: number;
   /** Parsed JSON error body, or the raw text when the body was not JSON. */
@@ -46,8 +46,8 @@ export interface SupportlyErrorInit {
 }
 
 /** Base class for everything the SDK throws. */
-export class SupportlyError extends Error {
-  override readonly name: SupportlyErrorName = "SupportlyError";
+export class SapportlyError extends Error {
+  override readonly name: SapportlyErrorName = "SapportlyError";
   readonly status: number;
   readonly body: unknown;
   readonly requestId?: string;
@@ -59,7 +59,7 @@ export class SupportlyError extends Error {
   readonly url?: string;
   readonly attempts: number;
 
-  constructor(message: string, init: SupportlyErrorInit = {}) {
+  constructor(message: string, init: SapportlyErrorInit = {}) {
     super(message, init.cause === undefined ? undefined : { cause: init.cause });
     this.status = init.status ?? 0;
     this.body = init.body;
@@ -73,58 +73,58 @@ export class SupportlyError extends Error {
     this.attempts = init.attempts ?? 1;
   }
 
-  /** `supportly: {message} (status {status})` — stable, greppable in logs. */
+  /** `sapportly: {message} (status {status})` — stable, greppable in logs. */
   override toString(): string {
     const id = this.requestId ? ` [request ${this.requestId}]` : "";
-    return `supportly: ${this.message} (status ${this.status})${id}`;
+    return `sapportly: ${this.message} (status ${this.status})${id}`;
   }
 }
 
 /** The SDK refused to send the request: missing API key, bad base URL, no `fetch`. */
-export class SupportlyConfigError extends SupportlyError {
-  override readonly name = "SupportlyConfigError";
+export class SapportlyConfigError extends SapportlyError {
+  override readonly name = "SapportlyConfigError";
 }
 
 /** The request never produced a response (DNS, TLS, connection reset, offline). */
-export class SupportlyConnectionError extends SupportlyError {
-  override readonly name: SupportlyErrorName = "SupportlyConnectionError";
+export class SapportlyConnectionError extends SapportlyError {
+  override readonly name: SapportlyErrorName = "SapportlyConnectionError";
 }
 
 /** The request exceeded `timeoutMs`, or the caller's `AbortSignal` fired. */
-export class SupportlyTimeoutError extends SupportlyConnectionError {
-  override readonly name = "SupportlyTimeoutError";
+export class SapportlyTimeoutError extends SapportlyConnectionError {
+  override readonly name = "SapportlyTimeoutError";
   /** `true` when the caller's own signal aborted rather than the SDK's timeout. */
   readonly aborted: boolean;
 
-  constructor(message: string, init: SupportlyErrorInit & { aborted?: boolean } = {}) {
+  constructor(message: string, init: SapportlyErrorInit & { aborted?: boolean } = {}) {
     super(message, init);
     this.aborted = init.aborted ?? false;
   }
 }
 
-/** 401 — missing, malformed, revoked key, or the key lacks the required scope. */
-export class SupportlyAuthError extends SupportlyError {
-  override readonly name = "SupportlyAuthError";
+/** 401 — missing, malformed, or revoked API key / credentials. */
+export class SapportlyAuthError extends SapportlyError {
+  override readonly name = "SapportlyAuthError";
 }
 
-/** 403 — authenticated, but not allowed to touch this resource. */
-export class SupportlyPermissionError extends SupportlyError {
-  override readonly name = "SupportlyPermissionError";
+/** 403 — authenticated, but missing scope or not allowed to touch this resource. */
+export class SapportlyPermissionError extends SapportlyError {
+  override readonly name = "SapportlyPermissionError";
 }
 
 /** 404 — no such conversation, channel, attachment, or metric. */
-export class SupportlyNotFoundError extends SupportlyError {
-  override readonly name = "SupportlyNotFoundError";
+export class SapportlyNotFoundError extends SapportlyError {
+  override readonly name = "SapportlyNotFoundError";
 }
 
 /** 400 / 409 / 422 — the request body or query failed server-side validation. */
-export class SupportlyValidationError extends SupportlyError {
-  override readonly name = "SupportlyValidationError";
+export class SapportlyValidationError extends SapportlyError {
+  override readonly name = "SapportlyValidationError";
 }
 
 /** 402 — the tenant's plan quota is exhausted. */
-export class SupportlyPaymentRequiredError extends SupportlyError {
-  override readonly name = "SupportlyPaymentRequiredError";
+export class SapportlyPaymentRequiredError extends SapportlyError {
+  override readonly name = "SapportlyPaymentRequiredError";
   /** Which quota ran out, e.g. `messages`. */
   readonly resource?: string;
   readonly used?: number;
@@ -132,7 +132,7 @@ export class SupportlyPaymentRequiredError extends SupportlyError {
 
   constructor(
     message: string,
-    init: SupportlyErrorInit & { resource?: string; used?: number; limit?: number } = {},
+    init: SapportlyErrorInit & { resource?: string; used?: number; limit?: number } = {},
   ) {
     super(message, init);
     this.resource = init.resource;
@@ -142,25 +142,25 @@ export class SupportlyPaymentRequiredError extends SupportlyError {
 }
 
 /** 413 — the body exceeded the gateway's 2 MiB limit. */
-export class SupportlyPayloadTooLargeError extends SupportlyError {
-  override readonly name = "SupportlyPayloadTooLargeError";
+export class SapportlyPayloadTooLargeError extends SapportlyError {
+  override readonly name = "SapportlyPayloadTooLargeError";
 }
 
 /** 429 — the sliding-window rate limiter rejected the request. */
-export class SupportlyRateLimitError extends SupportlyError {
-  override readonly name = "SupportlyRateLimitError";
+export class SapportlyRateLimitError extends SapportlyError {
+  override readonly name = "SapportlyRateLimitError";
   /** Wait hint in milliseconds, from `Retry-After` when the API sends one. */
   readonly retryAfterMs?: number;
 
-  constructor(message: string, init: SupportlyErrorInit & { retryAfterMs?: number } = {}) {
+  constructor(message: string, init: SapportlyErrorInit & { retryAfterMs?: number } = {}) {
     super(message, init);
     this.retryAfterMs = init.retryAfterMs;
   }
 }
 
 /** 5xx — the platform failed to handle an otherwise valid request. */
-export class SupportlyServerError extends SupportlyError {
-  override readonly name = "SupportlyServerError";
+export class SapportlyServerError extends SapportlyError {
+  override readonly name = "SapportlyServerError";
 }
 
 function stringField(body: unknown, key: string): string | undefined {
@@ -175,9 +175,9 @@ function requestIdFromBody(body: unknown): string | undefined {
 
 /** True for errors where retrying the identical request can succeed. */
 export function isRetryableError(error: unknown): boolean {
-  if (error instanceof SupportlyTimeoutError) return !error.aborted;
-  if (error instanceof SupportlyConnectionError) return true;
-  if (error instanceof SupportlyRateLimitError) return true;
-  if (error instanceof SupportlyServerError) return true;
+  if (error instanceof SapportlyTimeoutError) return !error.aborted;
+  if (error instanceof SapportlyConnectionError) return true;
+  if (error instanceof SapportlyRateLimitError) return true;
+  if (error instanceof SapportlyServerError) return true;
   return false;
 }

@@ -1,16 +1,16 @@
 {
   "name": "@sapportly/sdk",
-  "version": "1.3.0",
-  "description": "Sapportly TypeScript SDK (@sapportly/sdk) — official client for the Supportly public API. Not @supportly/sdk: that npm name is unavailable.",
+  "version": "1.4.3",
+  "description": "Sapportly TypeScript SDK (@sapportly/sdk) — official client for the Sapportly public API. Not @supportly/sdk: that npm name is unavailable.",
   "license": "MIT",
-  "author": "Supportly <ac@supportly.cc>",
+  "author": "Sapportly <ac@sapportly.pro>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Supportly-Tech/supportly-sdk.git",
+    "url": "git+https://github.com/Sapportly-Tech/supportly-sdk.git",
     "directory": "typescript"
   },
-  "homepage": "https://docs.supportly.cc/docs/sdk/typescript",
-  "bugs": "https://github.com/Supportly-Tech/supportly-sdk/issues",
+  "homepage": "https://docs.sapportly.pro/docs/sdk/typescript",
+  "bugs": "https://github.com/Sapportly-Tech/supportly-sdk/issues",
   "keywords": [
     "sapportly",
     "supportly",

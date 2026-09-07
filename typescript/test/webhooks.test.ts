@@ -9,6 +9,7 @@ import {
   WEBHOOK_SIGNATURE_HEADER,
   WEBHOOK_TIMESTAMP_HEADER,
   WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS,
+  WebhookReplayGuard,
   WebhookVerificationError,
 } from "../src/webhooks";
 
@@ -37,7 +38,7 @@ async function reasonFor(
       SECRET,
       body,
       headers as { timestamp: string; signature: string },
-      { nowSeconds },
+      { nowSeconds, replayGuard: false },
     );
     return null;
   } catch (error) {
@@ -75,6 +76,16 @@ describe("signWebhookBody", () => {
 });
 
 describe("verifyWebhook", () => {
+  it("rejects empty and whitespace secrets", async () => {
+    const headers = await headersFor();
+    for (const bad of ["", "   ", "\t\n", "\u200B\u200B", "\uFEFF"]) {
+      await expect(verifyWebhook(bad, BODY, headers, { nowSeconds: NOW, replayGuard: false })).rejects.toMatchObject({
+        reason: "missing_secret",
+      });
+      await expect(isValidWebhook(bad, BODY, headers, { nowSeconds: NOW, replayGuard: false })).resolves.toBe(false);
+    }
+  });
+
   it("accepts a valid signature", async () => {
     expect(await reasonFor(BODY, await headersFor())).toBeNull();
   });
@@ -157,21 +168,72 @@ describe("verifyWebhook", () => {
   it("honours a caller-supplied tolerance", async () => {
     const headers = await headersFor(BODY, NOW - 600);
     await expect(
-      verifyWebhook(SECRET, BODY, headers, { nowSeconds: NOW, toleranceSeconds: 900 }),
+      verifyWebhook(SECRET, BODY, headers, { nowSeconds: NOW, toleranceSeconds: 900, replayGuard: false }),
     ).resolves.toBeUndefined();
   });
 
   it("accepts a numeric timestamp header", async () => {
     const signature = await signWebhookBody(SECRET, NOW, BODY);
     await expect(
-      verifyWebhook(SECRET, BODY, { timestamp: NOW, signature }, { nowSeconds: NOW }),
+      verifyWebhook(SECRET, BODY, { timestamp: NOW, signature }, { nowSeconds: NOW, replayGuard: false }),
     ).resolves.toBeUndefined();
+  });
+
+  it("HMACs the trimmed secret (matches Rust normalize_webhook_secret)", async () => {
+    const padded = `  ${SECRET}  `;
+    const headers = {
+      timestamp: String(NOW),
+      signature: await signWebhookBody(SECRET, NOW, BODY),
+    };
+    await expect(
+      verifyWebhook(padded, BODY, headers, { nowSeconds: NOW, replayGuard: false }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects NaN toleranceSeconds", async () => {
+    const headers = await headersFor(BODY, NOW + 99);
+    await expect(
+      verifyWebhook(SECRET, BODY, headers, {
+        nowSeconds: NOW + 99,
+        toleranceSeconds: Number("nope"),
+        replayGuard: false,
+      }),
+    ).rejects.toMatchObject({ reason: "invalid_timestamp" });
+  });
+
+  it("replay guard TTL follows widened tolerance", async () => {
+    const guard = new WebhookReplayGuard();
+    const at = NOW + 200;
+    const headers = await headersFor(BODY, at);
+    await verifyWebhook(SECRET, BODY, headers, {
+      nowSeconds: at,
+      toleranceSeconds: 900,
+      replayGuard: guard,
+    });
+    // Still within 900s window — must reject even after >300s wall would have
+    // expired a fixed-300 guard (we advance now inside the same guard TTL arg).
+    await expect(
+      verifyWebhook(SECRET, BODY, headers, {
+        nowSeconds: at + 400,
+        toleranceSeconds: 900,
+        replayGuard: guard,
+      }),
+    ).rejects.toMatchObject({ reason: "stale_timestamp" });
+  });
+
+  it("rejects an identical capture replay within the window", async () => {
+    const guard = new WebhookReplayGuard();
+    const headers = await headersFor(BODY, NOW + 42);
+    await verifyWebhook(SECRET, BODY, headers, { nowSeconds: NOW + 42, replayGuard: guard });
+    await expect(
+      verifyWebhook(SECRET, BODY, headers, { nowSeconds: NOW + 42, replayGuard: guard }),
+    ).rejects.toMatchObject({ reason: "stale_timestamp" });
   });
 });
 
 describe("isValidWebhook", () => {
   it("returns true for a valid request", async () => {
-    expect(await isValidWebhook(SECRET, BODY, await headersFor(), { nowSeconds: NOW })).toBe(true);
+    expect(await isValidWebhook(SECRET, BODY, await headersFor(), { nowSeconds: NOW, replayGuard: false })).toBe(true);
   });
 
   it("returns false instead of throwing on a bad signature", async () => {
@@ -194,6 +256,7 @@ describe("verifyWebhookRequest", () => {
 
     const event = await verifyWebhookRequest<{ event: string }>(SECRET, request, {
       nowSeconds: NOW,
+      replayGuard: false,
     });
     expect(event.event).toBe("message.created");
   });

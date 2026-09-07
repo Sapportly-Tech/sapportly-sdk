@@ -1,15 +1,15 @@
 /**
- * Wire types for the Supportly public API.
+ * Wire types for the Sapportly public API.
  *
  * Field names mirror the JSON exactly (snake_case) so a response can be handed
  * straight to `JSON.stringify` and back without a mapping layer.
  */
 
 /** Production API base URL. */
-export const DEFAULT_BASE_URL = "https://api.supportly.cc";
+export const DEFAULT_BASE_URL = "https://api.sapportly.pro";
 
 /** Production WebSocket gateway. Ticket endpoints return the authoritative URL. */
-export const DEFAULT_WS_URL = "wss://ws.supportly.cc/ws";
+export const DEFAULT_WS_URL = "wss://ws.sapportly.pro/ws";
 
 /** Gateway-wide request body ceiling (`MAX_REQUEST_BODY_BYTES`). */
 export const MAX_REQUEST_BODY_BYTES = 2 * 1024 * 1024;
@@ -148,12 +148,17 @@ export interface MessageAccepted {
   event_id: string;
   correlation_id: string;
   /**
-   * Set only when the write was deduplicated against an existing message
-   * (HTTP 200). A fresh accept (HTTP 202) is asynchronous and returns `null`.
+   * Stable UUID from `(tenant_id, idempotency_key)`. Present on both HTTP 202
+   * (before persist) and HTTP 200 (dedup).
    */
-  message_id: string | null;
+  message_id: string;
+  /**
+   * `true` when the server deduplicated this write by `idempotency_key`
+   * (HTTP 200). Fresh accepts omit the field.
+   */
+  duplicate?: boolean;
   /** Ключ ленты после привязки треда (`custom:shop:{uuid}`). */
-  channel?: string | null;
+  channel: string;
   source_channel?: string | null;
   thread_id?: string | null;
 }

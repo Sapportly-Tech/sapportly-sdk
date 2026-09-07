@@ -2,16 +2,16 @@
 export const WIDGET_SDK_VERSION = "1.2.0";
 
 /** SHA256-префикс `supportly_widget_bg.wasm` — штампует `packages/widget/build.ps1`. */
-export const WIDGET_WASM_ASSET_VERSION = "322a4f989216";
+export const WIDGET_WASM_ASSET_VERSION = "36da946d2c75";
 
 /** SHA256-префикс loader shell + CSS — штампуется на сборке виджета. */
-export const WIDGET_GLUE_ASSET_VERSION = "56e303416791";
+export const WIDGET_GLUE_ASSET_VERSION = "fa75b82c5535";
 
 /** Базовый URL публичного REST API. */
-export const DEFAULT_API_URL = "https://api.supportly.cc";
+export const DEFAULT_API_URL = "https://api.sapportly.pro";
 
 /** Базовый URL CDN ассетов виджета. */
-export const DEFAULT_CDN_URL = "https://cdn.supportly.cc";
+export const DEFAULT_CDN_URL = "https://cdn.sapportly.pro";
 
 /** Белый список analytics-событий, которые шлёт embed shell. */
 export const WIDGET_ANALYTICS_EVENTS = [

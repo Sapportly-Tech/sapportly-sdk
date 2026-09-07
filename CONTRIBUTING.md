@@ -2,13 +2,13 @@
 
 Репозиторий **Sapportly SDKs**: `@sapportly/sdk` (REST) и `@sapportly/widget-sdk` (embed).
 
-Имена `@supportly/sdk` / `@supportly/widget-sdk` на npm **не используются**: scope `supportly` недоступен. Продукт — Supportly; npm-org — **sapportly**.
+Имена `@sapportly/sdk` / `@sapportly/widget-sdk` на npm **не используются**: scope `supportly` недоступен. Продукт — Sapportly; npm-org — **sapportly**.
 
 ## Граница продукта
 
-REST SDK — **только** public API (`api.supportly.cc`, ключ `sk_live_…`). Не добавляйте маршруты панели, admin или BFF. Контракт поведения — [`SPEC.md`](SPEC.md).
+REST SDK — **только** public API (`api.sapportly.pro`, ключ `sk_live_…`). Не добавляйте маршруты панели, admin или BFF. Контракт поведения — [`SPEC.md`](SPEC.md).
 
-Widget SDK — только публичный Site ID (`wgt_…`) и загрузка embed shell. Не тащите сюда `@supportly/api` и не экспортируйте headless REST: это `@sapportly/sdk` → `client.widget`.
+Widget SDK — только публичный Site ID (`wgt_…`) и загрузка embed shell. Не тащите сюда `@sapportly/api` и не экспортируйте headless REST: это `@sapportly/sdk` → `client.widget`.
 
 ## Локально
 

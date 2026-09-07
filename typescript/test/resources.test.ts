@@ -9,13 +9,13 @@ import {
   widgetChannel,
   WIDGET_REGISTRY_CHANNEL,
 } from "../src/channels";
-import { SupportlyClient } from "../src/client";
-import { SupportlyError, SupportlyValidationError } from "../src/errors";
+import { SapportlyClient } from "../src/client";
+import { SapportlyError, SapportlyValidationError } from "../src/errors";
 import { websocketUrl } from "../src/resources/realtime";
 import { mockFetch } from "./helpers";
 
 function client(mock: ReturnType<typeof mockFetch>) {
-  return new SupportlyClient({ apiKey: "sk_live_test", fetch: mock.fetch, sleep: mock.sleep });
+  return new SapportlyClient({ apiKey: "sk_live_test", fetch: mock.fetch, sleep: mock.sleep });
 }
 
 const VISITOR = "9d4c1e2a-5b6f-4c3d-8a1b-2e3f4a5b6c7d";
@@ -102,7 +102,7 @@ describe("attachments upload flow", () => {
         mimeType: "text/plain",
         content: new Uint8Array(),
       }),
-    ).rejects.toBeInstanceOf(SupportlyValidationError);
+    ).rejects.toBeInstanceOf(SapportlyValidationError);
 
     expect(mock.calls).toBe(0);
   });
@@ -116,7 +116,7 @@ describe("attachments upload flow", () => {
         mimeType: "application/pdf",
         content: new Uint8Array([1]),
       }),
-    ).rejects.toBeInstanceOf(SupportlyError);
+    ).rejects.toBeInstanceOf(SapportlyError);
 
     expect(mock.calls).toBe(2);
   });
@@ -155,7 +155,7 @@ describe("widget resource", () => {
 
   it("works without an API key at all for visitor calls", async () => {
     const mock = mockFetch([{ body: [] }]);
-    const anonymous = new SupportlyClient({ fetch: mock.fetch });
+    const anonymous = new SapportlyClient({ fetch: mock.fetch });
 
     await expect(
       anonymous.widget.history("vt_1", { visitor_id: VISITOR }),
@@ -237,12 +237,12 @@ describe("webhooks and rag", () => {
 describe("realtime tickets", () => {
   it("mints a ticket and builds a connect URL", async () => {
     const mock = mockFetch([
-      { body: { ticket: "tk_1", ws_url: "wss://ws.supportly.cc/ws", expires_in_secs: 60 } },
+      { body: { ticket: "tk_1", ws_url: "wss://ws.sapportly.pro/ws", expires_in_secs: 60 } },
     ]);
 
     const { ticket, ws_url } = await client(mock).realtime.createTicket();
     expect(new URL(mock.requests[0]!.url).pathname).toBe("/v1/ws/ticket");
-    expect(websocketUrl(ws_url, ticket)).toBe("wss://ws.supportly.cc/ws?ticket=tk_1");
+    expect(websocketUrl(ws_url, ticket)).toBe("wss://ws.sapportly.pro/ws?ticket=tk_1");
   });
 
   it("appends the ticket to a URL that already has a query", () => {

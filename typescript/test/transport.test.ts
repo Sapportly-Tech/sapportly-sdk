@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { SupportlyClient } from "../src/client";
+import { SapportlyClient } from "../src/client";
 import {
-  SupportlyAuthError,
-  SupportlyConfigError,
-  SupportlyConnectionError,
-  SupportlyNotFoundError,
-  SupportlyPayloadTooLargeError,
-  SupportlyPaymentRequiredError,
-  SupportlyPermissionError,
-  SupportlyRateLimitError,
-  SupportlyServerError,
-  SupportlyTimeoutError,
-  SupportlyValidationError,
+  SapportlyAuthError,
+  SapportlyConfigError,
+  SapportlyConnectionError,
+  SapportlyNotFoundError,
+  SapportlyPayloadTooLargeError,
+  SapportlyPaymentRequiredError,
+  SapportlyPermissionError,
+  SapportlyRateLimitError,
+  SapportlyServerError,
+  SapportlyTimeoutError,
+  SapportlyValidationError,
 } from "../src/errors";
 import { hangingFetch, mockFetch } from "./helpers";
 
 const API_KEY = "sk_live_test";
 
 function client(mock: ReturnType<typeof mockFetch>, options = {}) {
-  return new SupportlyClient({
+  return new SapportlyClient({
     apiKey: API_KEY,
     fetch: mock.fetch,
     sleep: mock.sleep,
@@ -27,7 +27,7 @@ function client(mock: ReturnType<typeof mockFetch>, options = {}) {
   });
 }
 
-const ACCEPTED = { accepted: true, event_id: "e1", correlation_id: "c1", message_id: null };
+const ACCEPTED = { accepted: true, event_id: "e1", correlation_id: "c1", message_id: "00000000-0000-0000-0000-000000000001", channel: "custom:shop" };
 
 describe("request shape", () => {
   it("sends the API key as a bearer token with a JSON body", async () => {
@@ -35,7 +35,7 @@ describe("request shape", () => {
     await client(mock).ingest.send({ channel: "custom:orders", body: "hi" });
 
     const [request] = mock.requests;
-    expect(request?.url).toBe("https://api.supportly.cc/v1/ingest/messages");
+    expect(request?.url).toBe("https://api.sapportly.pro/v1/ingest/messages");
     expect(request?.method).toBe("POST");
     expect(request?.headers.authorization).toBe(`Bearer ${API_KEY}`);
     expect(request?.headers["content-type"]).toBe("application/json");
@@ -61,8 +61,9 @@ describe("request shape", () => {
     expect(url.pathname).toBe("/v1/conversations");
     expect(url.searchParams.get("limit")).toBe("25");
     expect(url.searchParams.get("q")).toBe("refund");
+    expect(url.searchParams.get("envelope")).toBe("true");
     expect(url.searchParams.has("before_at")).toBe(false);
-    expect(mock.requests[0]?.headers["x-supportly-list-envelope"]).toBe("1");
+    expect(mock.requests[0]?.headers["x-sapportly-list-envelope"]).toBe("1");
   });
 
   it("percent-encodes channel keys in the path", async () => {
@@ -99,15 +100,15 @@ describe("request shape", () => {
 describe("authentication guards", () => {
   it("fails before the network when a scoped call has no API key", async () => {
     const mock = mockFetch([{ body: [] }]);
-    const anonymous = new SupportlyClient({ fetch: mock.fetch });
+    const anonymous = new SapportlyClient({ fetch: mock.fetch });
 
-    await expect(anonymous.conversations.list()).rejects.toThrow(SupportlyConfigError);
+    await expect(anonymous.conversations.list()).rejects.toThrow(SapportlyConfigError);
     expect(mock.calls).toBe(0);
   });
 
   it("allows unauthenticated ops endpoints without a key", async () => {
     const mock = mockFetch([{ body: { version: "1.3", phase: "ga" } }]);
-    await expect(new SupportlyClient({ fetch: mock.fetch }).status()).resolves.toMatchObject({
+    await expect(new SapportlyClient({ fetch: mock.fetch }).status()).resolves.toMatchObject({
       version: "1.3",
     });
   });
@@ -117,7 +118,7 @@ describe("authentication guards", () => {
     // @ts-expect-error — deliberately removing the global for this assertion.
     delete globalThis.fetch;
     try {
-      expect(() => new SupportlyClient({ apiKey: API_KEY })).toThrow(SupportlyConfigError);
+      expect(() => new SapportlyClient({ apiKey: API_KEY })).toThrow(SapportlyConfigError);
     } finally {
       globalThis.fetch = original;
     }
@@ -126,16 +127,16 @@ describe("authentication guards", () => {
 
 describe("error mapping", () => {
   const cases: Array<[number, unknown, new (...args: never[]) => Error]> = [
-    [400, { error: "channel is required" }, SupportlyValidationError],
-    [401, { error: "invalid api key" }, SupportlyAuthError],
-    [403, { error: "missing scope messages:write" }, SupportlyPermissionError],
-    [404, { error: "not found" }, SupportlyNotFoundError],
-    [409, { error: "conflict" }, SupportlyValidationError],
-    [413, { error: "payload too large" }, SupportlyPayloadTooLargeError],
-    [422, { error: "invalid channel namespace" }, SupportlyValidationError],
-    [429, { error: "rate limited" }, SupportlyRateLimitError],
-    [500, { error: "boom" }, SupportlyServerError],
-    [503, { error: "unavailable" }, SupportlyServerError],
+    [400, { error: "channel is required" }, SapportlyValidationError],
+    [401, { error: "invalid api key" }, SapportlyAuthError],
+    [403, { error: "missing scope messages:write" }, SapportlyPermissionError],
+    [404, { error: "not found" }, SapportlyNotFoundError],
+    [409, { error: "conflict" }, SapportlyValidationError],
+    [413, { error: "payload too large" }, SapportlyPayloadTooLargeError],
+    [422, { error: "invalid channel namespace" }, SapportlyValidationError],
+    [429, { error: "rate limited" }, SapportlyRateLimitError],
+    [500, { error: "boom" }, SapportlyServerError],
+    [503, { error: "unavailable" }, SapportlyServerError],
   ];
 
   for (const [status, body, expected] of cases) {
@@ -157,9 +158,9 @@ describe("error mapping", () => {
     ]);
 
     const error = await client(mock).conversations.list().catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(SupportlyPermissionError);
+    expect(error).toBeInstanceOf(SapportlyPermissionError);
 
-    const permission = error as SupportlyPermissionError;
+    const permission = error as SapportlyPermissionError;
     expect(permission.status).toBe(403);
     expect(permission.requestId).toBe("req_9f2");
     expect(permission.message).toBe("missing scope conversations:read");
@@ -177,17 +178,17 @@ describe("error mapping", () => {
           code: "validation_error",
           message: "channel is required",
           request_id: "req_body",
-          docs_url: "https://docs.supportly.cc/docs/api/errors#validation_error",
+          docs_url: "https://docs.sapportly.pro/docs/api/errors#validation_error",
         },
       },
     ]);
 
-    const error = (await client(mock).conversations.list().catch((e: unknown) => e)) as SupportlyValidationError;
-    expect(error).toBeInstanceOf(SupportlyValidationError);
+    const error = (await client(mock).conversations.list().catch((e: unknown) => e)) as SapportlyValidationError;
+    expect(error).toBeInstanceOf(SapportlyValidationError);
     expect(error.message).toBe("channel is required");
     expect(error.code).toBe("validation_error");
     expect(error.type).toBe("invalid_request_error");
-    expect(error.docsUrl).toBe("https://docs.supportly.cc/docs/api/errors#validation_error");
+    expect(error.docsUrl).toBe("https://docs.sapportly.pro/docs/api/errors#validation_error");
     expect(error.requestId).toBe("req_body");
   });
 
@@ -198,9 +199,9 @@ describe("error mapping", () => {
 
     const error = (await client(mock)
       .ingest.send({ channel: "custom:x", body: "y" })
-      .catch((e: unknown) => e)) as SupportlyPaymentRequiredError;
+      .catch((e: unknown) => e)) as SapportlyPaymentRequiredError;
 
-    expect(error).toBeInstanceOf(SupportlyPaymentRequiredError);
+    expect(error).toBeInstanceOf(SapportlyPaymentRequiredError);
     expect(error.resource).toBe("messages");
     expect(error.limit).toBe(1000);
   });
@@ -209,7 +210,7 @@ describe("error mapping", () => {
     const mock = mockFetch([{ status: 502, body: "<html>bad gateway</html>" }]);
     const error = (await client(mock, { retry: { maxRetries: 0 } })
       .conversations.list()
-      .catch((e: unknown) => e)) as SupportlyServerError;
+      .catch((e: unknown) => e)) as SapportlyServerError;
 
     expect(error.status).toBe(502);
     expect(error.body).toBe("<html>bad gateway</html>");
@@ -219,26 +220,26 @@ describe("error mapping", () => {
     const mock = mockFetch([{ error: new TypeError("fetch failed") }]);
     await expect(
       client(mock, { retry: { maxRetries: 0 } }).conversations.list(),
-    ).rejects.toBeInstanceOf(SupportlyConnectionError);
+    ).rejects.toBeInstanceOf(SapportlyConnectionError);
   });
 
   it("reports a timeout distinctly from a generic connection error", async () => {
-    const c = new SupportlyClient({ apiKey: API_KEY, fetch: hangingFetch(), timeoutMs: 5 });
+    const c = new SapportlyClient({ apiKey: API_KEY, fetch: hangingFetch(), timeoutMs: 5 });
     const error = await c.conversations.list().catch((e: unknown) => e);
 
-    expect(error).toBeInstanceOf(SupportlyTimeoutError);
-    expect((error as SupportlyTimeoutError).aborted).toBe(false);
+    expect(error).toBeInstanceOf(SapportlyTimeoutError);
+    expect((error as SapportlyTimeoutError).aborted).toBe(false);
   });
 
   it("marks caller-initiated aborts so they are not retried", async () => {
     const controller = new AbortController();
-    const c = new SupportlyClient({ apiKey: API_KEY, fetch: hangingFetch(), timeoutMs: 0 });
+    const c = new SapportlyClient({ apiKey: API_KEY, fetch: hangingFetch(), timeoutMs: 0 });
 
     const pending = c.conversations.list({}, { signal: controller.signal });
     controller.abort();
 
-    const error = (await pending.catch((e: unknown) => e)) as SupportlyTimeoutError;
-    expect(error).toBeInstanceOf(SupportlyTimeoutError);
+    const error = (await pending.catch((e: unknown) => e)) as SapportlyTimeoutError;
+    expect(error).toBeInstanceOf(SapportlyTimeoutError);
     expect(error.aborted).toBe(true);
   });
 });
@@ -260,7 +261,7 @@ describe("retry policy", () => {
     const mock = mockFetch([{ status: 500, body: { error: "boom" } }]);
     await expect(
       client(mock, { retry: { maxRetries: 2 } }).conversations.list(),
-    ).rejects.toBeInstanceOf(SupportlyServerError);
+    ).rejects.toBeInstanceOf(SapportlyServerError);
 
     // maxRetries: 2 means three requests in total.
     expect(mock.calls).toBe(3);
@@ -269,7 +270,7 @@ describe("retry policy", () => {
   it("does not retry 4xx that the client caused", async () => {
     const mock = mockFetch([{ status: 400, body: { error: "bad channel" } }]);
     await expect(client(mock).conversations.list()).rejects.toBeInstanceOf(
-      SupportlyValidationError,
+      SapportlyValidationError,
     );
     expect(mock.calls).toBe(1);
   });
@@ -337,9 +338,9 @@ describe("429 handling", () => {
 
     const error = (await client(mock, { retry: { maxRetryAfterMs: 60_000 } })
       .conversations.list()
-      .catch((e: unknown) => e)) as SupportlyRateLimitError;
+      .catch((e: unknown) => e)) as SapportlyRateLimitError;
 
-    expect(error).toBeInstanceOf(SupportlyRateLimitError);
+    expect(error).toBeInstanceOf(SapportlyRateLimitError);
     expect(error.retryAfterMs).toBe(3_600_000);
     expect(mock.calls).toBe(1);
   });
@@ -412,7 +413,7 @@ describe("idempotency and replay safety", () => {
     const mock = mockFetch([{ status: 503, body: { error: "unavailable" } }]);
     await expect(
       client(mock).conversations.transfer("widget:abc", { to_user_id: "u1" }),
-    ).rejects.toBeInstanceOf(SupportlyServerError);
+    ).rejects.toBeInstanceOf(SapportlyServerError);
 
     expect(mock.calls).toBe(1);
   });
@@ -425,5 +426,25 @@ describe("idempotency and replay safety", () => {
 
     await client(mock).conversations.assign("widget:abc", { assignee_user_id: "u1" });
     expect(mock.calls).toBe(2);
+  });
+});
+
+
+describe("auth header casing", () => {
+  it("authorization casing cannot override the client API key", async () => {
+    let seenAuth: string | null = null;
+    const { SapportlyClient } = await import("../src/client");
+    const client = new SapportlyClient({
+      apiKey: "sk_live_real_key",
+      baseUrl: "https://api.test",
+      headers: { authorization: "Bearer sk_live_attacker" },
+      fetch: async (_input, init) => {
+        const h = new Headers(init?.headers);
+        seenAuth = h.get("authorization");
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      },
+    });
+    await client.conversations.list({ limit: 1 });
+    expect(seenAuth).toBe("Bearer sk_live_real_key");
   });
 });

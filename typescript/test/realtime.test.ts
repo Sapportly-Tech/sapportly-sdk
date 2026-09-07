@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { type RealtimeOptions, SupportlyRealtime, type WebSocketLike } from "../src/realtime";
+import { type RealtimeOptions, SapportlyRealtime, type WebSocketLike } from "../src/realtime";
 import type { WsTicketResponse } from "../src/types";
 
 /** Minimal scriptable `WebSocket`, so tests drive the lifecycle by hand. */
@@ -69,7 +69,7 @@ function setup(overrides: Partial<RealtimeOptions> = {}) {
   const events: unknown[] = [];
   const states: string[] = [];
 
-  const realtime = new SupportlyRealtime({
+  const realtime = new SapportlyRealtime({ trustedApiBaseUrl: "https://api.test",
     tickets,
     WebSocket: (url) => new FakeSocket(url),
     onEvent: (event) => events.push(event),
@@ -89,7 +89,7 @@ async function openLatest(pending: Promise<void>): Promise<FakeSocket> {
   return socket;
 }
 
-describe("SupportlyRealtime", () => {
+describe("SapportlyRealtime", () => {
   it("mints a ticket and connects with it in the query string", async () => {
     const { realtime, tickets } = setup();
     const socket = await openLatest(realtime.connect());
@@ -234,7 +234,7 @@ describe("SupportlyRealtime", () => {
   });
 
   it("propagates a ticket failure to the caller", async () => {
-    const realtime = new SupportlyRealtime({
+    const realtime = new SapportlyRealtime({ trustedApiBaseUrl: "https://api.test",
       tickets: { createTicket: async () => Promise.reject(new Error("403 missing ws:connect")) },
       WebSocket: (url) => new FakeSocket(url),
     });
@@ -255,7 +255,7 @@ describe("SupportlyRealtime", () => {
     const original = (globalThis as { WebSocket?: unknown }).WebSocket;
     delete (globalThis as { WebSocket?: unknown }).WebSocket;
     try {
-      expect(() => new SupportlyRealtime({ tickets: ticketStub() })).toThrow(/global WebSocket/);
+      expect(() => new SapportlyRealtime({ trustedApiBaseUrl: "https://api.test", tickets: ticketStub() })).toThrow(/global WebSocket/);
     } finally {
       if (original) (globalThis as { WebSocket?: unknown }).WebSocket = original;
     }

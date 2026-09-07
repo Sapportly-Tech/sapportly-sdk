@@ -15,10 +15,10 @@
  */
 
 /** Unix seconds at which the payload was signed. */
-export const WEBHOOK_TIMESTAMP_HEADER = "X-Supportly-Timestamp";
+export const WEBHOOK_TIMESTAMP_HEADER = "X-Sapportly-Timestamp";
 
 /** `sha256={lowercase-hex}`. */
-export const WEBHOOK_SIGNATURE_HEADER = "X-Supportly-Signature";
+export const WEBHOOK_SIGNATURE_HEADER = "X-Sapportly-Signature";
 
 /** Clock skew the platform tolerates, in seconds. Matches the sender. */
 export const WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 300;
@@ -27,6 +27,7 @@ const SIGNATURE_PREFIX = "sha256=";
 
 /** Why a webhook was rejected. */
 export type WebhookVerificationFailure =
+  | "missing_secret"
   | "missing_timestamp"
   | "invalid_timestamp"
   | "stale_timestamp"
@@ -58,7 +59,43 @@ export interface VerifyWebhookOptions {
   nowSeconds?: number;
   /** Override the replay window. Widening it weakens replay protection. */
   toleranceSeconds?: number;
+  /**
+   * Reject a second verify of the same timestamp+signature within the
+   * tolerance window (closes ±5m capture-replay for single-process receivers).
+   * Pass `false` to disable. Default: in-process {@link WebhookReplayGuard}.
+   */
+  replayGuard?: WebhookReplayGuard | false;
 }
+
+/**
+ * In-process replay set for {@link verifyWebhook}. Fleet receivers should share
+ * Redis/SQL instead (same key: `{timestamp}.{signature}`).
+ */
+export class WebhookReplayGuard {
+  private readonly seenAt = new Map<string, number>();
+  constructor(private readonly defaultTtlSeconds = WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS) {}
+
+  /**
+   * Atomically claim `key` for `ttlSeconds`.
+   * Returns `true` if it was **already** seen (caller must reject as replay).
+   */
+  claim(key: string, nowSeconds: number, ttlSeconds = this.defaultTtlSeconds): boolean {
+    const ttl = Number.isFinite(ttlSeconds) && ttlSeconds >= 0 ? ttlSeconds : this.defaultTtlSeconds;
+    this.evict(nowSeconds, ttl);
+    const at = this.seenAt.get(key);
+    if (at !== undefined && nowSeconds - at <= ttl) return true;
+    this.seenAt.set(key, nowSeconds);
+    return false;
+  }
+
+  private evict(nowSeconds: number, ttlSeconds: number): void {
+    for (const [k, at] of this.seenAt) {
+      if (nowSeconds - at > ttlSeconds) this.seenAt.delete(k);
+    }
+  }
+}
+
+const defaultReplayGuard = new WebhookReplayGuard();
 
 function toBytes(body: WebhookBody): Uint8Array {
   if (typeof body === "string") return new TextEncoder().encode(body);
@@ -143,11 +180,11 @@ export async function signWebhookBody(
  * object changes key order and whitespace, and the signature will not match.
  *
  * ```ts
- * app.post("/hooks/supportly", express.raw({ type: "application/json" }), async (req, res) => {
+ * app.post("/hooks/sapportly", express.raw({ type: "application/json" }), async (req, res) => {
  *   try {
- *     await verifyWebhook(process.env.SUPPORTLY_WEBHOOK_SECRET!, req.body, {
- *       timestamp: req.header("X-Supportly-Timestamp"),
- *       signature: req.header("X-Supportly-Signature"),
+ *     await verifyWebhook(process.env.SAPPORTLY_WEBHOOK_SECRET ?? process.env.SUPPORTLY_WEBHOOK_SECRET!, req.body, {
+ *       timestamp: req.header("X-Sapportly-Timestamp"),
+ *       signature: req.header("X-Sapportly-Signature"),
  *     });
  *   } catch {
  *     return res.sendStatus(401);
@@ -163,6 +200,17 @@ export async function verifyWebhook(
   headers: WebhookHeaders,
   options: VerifyWebhookOptions = {},
 ): Promise<void> {
+  const normalizedSecret =
+    typeof secret === "string"
+      ? secret.replace(/[\u200B-\u200D\uFEFF]/g, "").trim()
+      : "";
+  if (typeof secret !== "string" || normalizedSecret.length === 0) {
+    throw new WebhookVerificationError(
+      "missing_secret",
+      "webhook secret is required (empty, whitespace, or zero-width secrets are rejected)",
+    );
+  }
+
   const { timestamp, signature } = headers;
 
   if (timestamp === null || timestamp === undefined || timestamp === "") {
@@ -196,7 +244,7 @@ export async function verifyWebhook(
   // Freshness is checked before the HMAC: a replayed request should be cheap
   // to reject, and the timestamp is covered by the signature anyway, so an
   // attacker cannot swap in a fresh one.
-  const tolerance = options.toleranceSeconds ?? WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS;
+  const tolerance = resolveToleranceSeconds(options.toleranceSeconds);
   const now = options.nowSeconds ?? Math.floor(Date.now() / 1000);
   const skew = Math.abs(now - signedAt);
   if (skew > tolerance) {
@@ -206,10 +254,35 @@ export async function verifyWebhook(
     );
   }
 
-  const expected = await signWebhookBody(secret, signedAt, rawBody);
+  const expected = await signWebhookBody(normalizedSecret, signedAt, rawBody);
   if (!timingSafeEqual(expected, signature)) {
     throw new WebhookVerificationError("signature_mismatch", "signature does not match body");
   }
+
+  const guard = options.replayGuard === false ? null : (options.replayGuard ?? defaultReplayGuard);
+  if (guard) {
+    const replayKey = `${Math.trunc(signedAt)}.${signature}`;
+    // TTL matches this verify's tolerance so widened windows cannot outlive the guard.
+    if (guard.claim(replayKey, now, tolerance)) {
+      throw new WebhookVerificationError(
+        "stale_timestamp",
+        "webhook replay rejected (same timestamp+signature already accepted)",
+      );
+    }
+  }
+}
+
+/** Reject NaN/Infinity; cap absurd widenings at 24h. */
+function resolveToleranceSeconds(raw: number | undefined): number {
+  const fallback = WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS;
+  if (raw === undefined) return fallback;
+  if (!Number.isFinite(raw) || raw < 0) {
+    throw new WebhookVerificationError(
+      "invalid_timestamp",
+      "toleranceSeconds must be a finite non-negative number",
+    );
+  }
+  return Math.min(raw, 86_400);
 }
 
 /** Boolean form of {@link verifyWebhook} for callers that prefer a branch. */
@@ -220,7 +293,10 @@ export async function isValidWebhook(
   options: VerifyWebhookOptions = {},
 ): Promise<boolean> {
   try {
-    await verifyWebhook(secret, rawBody, headers, options);
+    // Predicate must not burn the default replay nonce — only remember when a
+    // guard is explicitly passed.
+    const replayGuard = options.replayGuard === undefined ? false : options.replayGuard;
+    await verifyWebhook(secret, rawBody, headers, { ...options, replayGuard });
     return true;
   } catch (error) {
     if (error instanceof WebhookVerificationError) return false;

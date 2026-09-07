@@ -5,7 +5,7 @@ name: Publish
 # Тег: v1.2.3 — обязан совпадать с typescript/package.json.
 # Виджет: теги widget-vX.Y.Z и workflow publish-widget.yml — не этот файл.
 # npmjs.com → пакет → Trusted Publisher:
-#   GitHub org/user: Supportly-Tech
+#   GitHub org/user: Sapportly-Tech
 #   Repository: supportly-sdk
 #   Workflow filename: publish.yml
 # npm org: sapportly (пакет @sapportly/sdk; scope supportly для этого SDK недоступен)
@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: supportly-sdk-tarball
+          name: sapportly-sdk-tarball
           path: "*.tgz"
 
       - name: Publish to npm

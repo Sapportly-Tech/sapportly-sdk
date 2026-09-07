@@ -1,16 +1,16 @@
 # @sapportly/widget-sdk
 
 [![npm](https://img.shields.io/npm/v/@sapportly/widget-sdk.svg)](https://www.npmjs.com/package/@sapportly/widget-sdk)
-[![CI](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Supportly-Tech/supportly-sdk/actions/workflows/ci.yml)
+[![CI](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/Sapportly-Tech/supportly-sdk/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@sapportly/widget-sdk.svg)](LICENSE)
 
-**This is the Sapportly Widget SDK** — the official embed helper for the [Supportly](https://supportly.cc) chat widget.
+**This is the Sapportly Widget SDK** — the official embed helper for the [Sapportly](https://sapportly.pro) chat widget.
 
-Install **`@sapportly/widget-sdk`**. There is no `@supportly/widget-sdk` on npm.
+Install **`@sapportly/widget-sdk`**. There is no `@sapportly/widget-sdk` on npm.
 
-The product, Site ID (`wgt_…`), CDN (`cdn.supportly.cc`), and `window.Supportly` remain **Supportly**. The npm scope `supportly` is not available for this package, so it is published under the **sapportly** org. Do not confuse this with [`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk) (REST API client) or `@supportly/api` (internal monorepo package).
+The product, Site ID (`wgt_…`), CDN (`cdn.sapportly.pro`), and `window.Sapportly` remain **Sapportly**. The npm scope `supportly` is not available for this package, so it is published under the **sapportly** org. Do not confuse this with [`@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk) (REST API client) or `@sapportly/api` (internal monorepo package).
 
-Source: [github.com/Supportly-Tech/supportly-sdk](https://github.com/Supportly-Tech/supportly-sdk) · Docs: [docs.supportly.cc/docs/guides/widget](https://docs.supportly.cc/docs/guides/widget)
+Source: [github.com/Sapportly-Tech/supportly-sdk](https://github.com/Sapportly-Tech/supportly-sdk) · Docs: [docs.sapportly.pro/docs/guides/widget](https://docs.sapportly.pro/docs/guides/widget)
 
 Works in any modern browser. Framework helpers for **React**, **Next.js**, **Vue 3**, and **Svelte**. Zero runtime dependencies.
 
@@ -42,11 +42,11 @@ Peer dependencies (`react`, `vue`, `svelte`, `next`) are optional — install on
 Copy the snippet from **Dashboard → Widget** or:
 
 ```html
-<script>window.Supportly=window.Supportly||{q:[]};</script>
+<script>window.Sapportly=window.Sapportly||{q:[]};</script>
 <script
-  src="https://cdn.supportly.cc/supportly.widget.js?v=322a4f989216"
+  src="https://cdn.sapportly.pro/supportly.widget.js?v=322a4f989216"
   data-site-id="wgt_..."
-  data-api-url="https://api.supportly.cc"
+  data-api-url="https://api.sapportly.pro"
   async
 ></script>
 ```
@@ -82,30 +82,30 @@ const widget = await installWidget(loaderOptionsFromEnv());
 ```tsx
 "use client";
 
-import { SupportlyWidget } from "@sapportly/widget-sdk/react";
+import { SapportlyWidget } from "@sapportly/widget-sdk/react";
 
 export function App() {
-  return <SupportlyWidget siteId="wgt_..." />;
+  return <SapportlyWidget siteId="wgt_..." />;
 }
 ```
 
 Zero-config with env:
 
 ```tsx
-import { SupportlyWidgetFromEnv } from "@sapportly/widget-sdk/react";
+import { SapportlyWidgetFromEnv } from "@sapportly/widget-sdk/react";
 
 export function App() {
-  return <SupportlyWidgetFromEnv />;
+  return <SapportlyWidgetFromEnv />;
 }
 ```
 
 Custom launcher:
 
 ```tsx
-import { useSupportly } from "@sapportly/widget-sdk/react";
+import { useSapportly } from "@sapportly/widget-sdk/react";
 
 function ChatButton() {
-  const { open, ready, identify } = useSupportly({ siteId: "wgt_..." });
+  const { open, ready, identify } = useSapportly({ siteId: "wgt_..." });
   return (
     <button disabled={!ready} onClick={() => void open()}>
       Support
@@ -120,12 +120,12 @@ function ChatButton() {
 // app/providers.tsx
 "use client";
 
-import { SupportlyScriptFromEnv } from "@sapportly/widget-sdk/next";
+import { SapportlyScriptFromEnv } from "@sapportly/widget-sdk/next";
 
-export function SupportlyProvider({ children }: { children: React.ReactNode }) {
+export function SapportlyProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <SupportlyScriptFromEnv />
+      <SapportlyScriptFromEnv />
       {children}
     </>
   );
@@ -135,10 +135,10 @@ export function SupportlyProvider({ children }: { children: React.ReactNode }) {
 ```tsx
 "use client";
 
-import { useSupportlyClient } from "@sapportly/widget-sdk/next";
+import { useSapportlyClient } from "@sapportly/widget-sdk/next";
 
 export function SupportButton() {
-  const { open, ready } = useSupportlyClient();
+  const { open, ready } = useSapportlyClient();
   return (
     <button disabled={!ready} onClick={() => void open()}>
       Chat
@@ -151,13 +151,13 @@ export function SupportButton() {
 
 ```vue
 <script setup lang="ts">
-import { SupportlyWidget, useSupportlyFromEnv } from "@sapportly/widget-sdk/vue";
+import { SapportlyWidget, useSapportlyFromEnv } from "@sapportly/widget-sdk/vue";
 
-const { open, ready } = useSupportlyFromEnv();
+const { open, ready } = useSapportlyFromEnv();
 </script>
 
 <template>
-  <SupportlyWidget site-id="wgt_..." />
+  <SapportlyWidget site-id="wgt_..." />
   <button :disabled="!ready" @click="open()">Support</button>
 </template>
 ```
@@ -166,9 +166,9 @@ const { open, ready } = useSupportlyFromEnv();
 
 ```svelte
 <script lang="ts">
-  import { createSupportly } from "@sapportly/widget-sdk/svelte";
+  import { createSapportly } from "@sapportly/widget-sdk/svelte";
 
-  const { client, ready } = createSupportly({ siteId: "wgt_..." });
+  const { client, ready } = createSapportly({ siteId: "wgt_..." });
 
   async function openChat() {
     await $client?.open();
@@ -185,14 +185,14 @@ const { open, ready } = useSupportlyFromEnv();
 | Export | Description |
 |--------|-------------|
 | `installWidget(siteId)` | Inject script + return client (easiest) |
-| `loadSupportly(options)` | Full control over loader options |
+| `loadSapportly(options)` | Full control over loader options |
 | `loaderOptionsFromEnv()` | Resolve Site ID from env vars |
 | `resolveSiteId()` | Read Site ID from props/env |
 | `buildEmbedSnippet(options)` | HTML copy-paste snippet |
-| `getSupportly()` | Get live client or `null` |
-| `onSupportlyEvent(event, handler)` | DOM `supportly:*` listener |
+| `getSapportly()` | Get live client or `null` |
+| `onSapportlyEvent(event, handler)` | DOM `supportly:*` listener |
 
-### `SupportlyClient` (embed shell)
+### `SapportlyClient` (embed shell)
 
 | Method | Description |
 |--------|-------------|
@@ -207,9 +207,9 @@ const { open, ready } = useSupportlyFromEnv();
 ### Headless REST (not this package)
 
 ```typescript
-import { SupportlyClient } from "@sapportly/sdk";
+import { SapportlyClient } from "@sapportly/sdk";
 
-const client = new SupportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
+const client = new SapportlyClient({ apiKey: process.env.SUPPORTLY_API_KEY! });
 await client.widget.createEmbedSession({ site_id: "wgt_..." });
 ```
 
@@ -218,18 +218,18 @@ await client.widget.createEmbedSession({ site_id: "wgt_..." });
 | Package | Exports |
 |---------|---------|
 | `@sapportly/widget-sdk` | loader, snippet, env helpers |
-| `@sapportly/widget-sdk/react` | `SupportlyWidget`, `useSupportly`, `*FromEnv` |
-| `@sapportly/widget-sdk/next` | `SupportlyScript`, `useSupportlyClient` |
-| `@sapportly/widget-sdk/vue` | `SupportlyWidget`, `useSupportly` |
-| `@sapportly/widget-sdk/svelte` | `createSupportly`, `attachSupportly` |
+| `@sapportly/widget-sdk/react` | `SapportlyWidget`, `useSapportly`, `*FromEnv` |
+| `@sapportly/widget-sdk/next` | `SapportlyScript`, `useSapportlyClient` |
+| `@sapportly/widget-sdk/vue` | `SapportlyWidget`, `useSapportly` |
+| `@sapportly/widget-sdk/svelte` | `createSapportly`, `attachSapportly` |
 
 ## Configuration
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `siteId` | — | Public Site ID `wgt_…` (**required**) |
-| `apiUrl` | `https://api.supportly.cc` | REST API base |
-| `cdnUrl` | `https://cdn.supportly.cc` | Widget assets CDN |
+| `apiUrl` | `https://api.sapportly.pro` | REST API base |
+| `cdnUrl` | `https://cdn.sapportly.pro` | Widget assets CDN |
 | `wsUrl` | — | WebSocket override |
 | `title` | — | Panel title override |
 | `version` | WASM hash | Cache-bust query on shell script |
@@ -249,18 +249,18 @@ Same GitHub repo as `@sapportly/sdk`. Widget releases use tags `widget-vX.Y.Z` (
 
 ## Links
 
-- [Dashboard — Widget settings](https://dashboard.supportly.cc/widget)
-- [Documentation](https://docs.supportly.cc/docs/guides/widget)
-- [Widget REST API](https://docs.supportly.cc/docs/api/widget)
+- [Dashboard — Widget settings](https://dashboard.sapportly.pro/widget)
+- [Documentation](https://docs.sapportly.pro/docs/guides/widget)
+- [Widget REST API](https://docs.sapportly.pro/docs/api/widget)
 - [REST API SDK `@sapportly/sdk`](https://www.npmjs.com/package/@sapportly/sdk)
 
 ---
 
 ## Русский
 
-Это **Sapportly Widget SDK**: на npm пакет **`@sapportly/widget-sdk`**, не `@supportly/widget-sdk`.
+Это **Sapportly Widget SDK**: на npm пакет **`@sapportly/widget-sdk`**, не `@sapportly/widget-sdk`.
 Scope `supportly` для публичных SDK недоступен; org npm — **sapportly**. Продукт и виджет —
-Supportly (`cdn.supportly.cc`, Site ID `wgt_…`, `window.Supportly`).
+Sapportly (`cdn.sapportly.pro`, Site ID `wgt_…`, `window.Sapportly`).
 
-Headless REST виджета — `@sapportly/sdk` (`client.widget`), не внутренний `@supportly/api`.
+Headless REST виджета — `@sapportly/sdk` (`client.widget`), не внутренний `@sapportly/api`.
 Лента посетителя — `widget:{uuid}`; реестр канала — `widget:web`.

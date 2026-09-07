@@ -1,27 +1,30 @@
 /**
- * Пример: свой Telegram-бот → Supportly inbox + AI + панель.
+ * Пример: свой Telegram-бот → Sapportly inbox + AI + панель.
  *
  * Один источник на весь бот (`custom:telegram`). Тред 1:1 собирается из
  * `identity.external_id` (chat.id) → `custom:telegram:{uuid}`.
  * Не создавайте канал на каждый chat.id — аналитика тогда разъедется.
  *
- * Запуск (Node 22+): SUPPORTLY_API_KEY=… BOT_TOKEN=… npx tsx examples/telegram-bot.ts
+ * Запуск (Node 22+): SAPPORTLY_API_KEY=… BOT_TOKEN=… npx tsx examples/telegram-bot.ts
+ * (legacy alias: SUPPORTLY_API_KEY)
  */
 
-import { bindThreadKey, SupportlyClient } from "../src/index";
-import { SupportlyInbox } from "../src/inbox";
+import { bindThreadKey, SapportlyClient } from "../src/index";
+import { SapportlyInbox } from "../src/inbox";
 
-const CHANNEL = process.env.SUPPORTLY_CHANNEL ?? "custom:telegram";
-const apiKey = process.env.SUPPORTLY_API_KEY;
+const CHANNEL =
+  process.env.SAPPORTLY_CHANNEL ?? process.env.SUPPORTLY_CHANNEL ?? "custom:telegram";
+const apiKey =
+  process.env.SAPPORTLY_API_KEY?.trim() || process.env.SUPPORTLY_API_KEY?.trim();
 const botToken = process.env.BOT_TOKEN;
 
 if (!apiKey || !botToken) {
-  console.error("Нужны SUPPORTLY_API_KEY и BOT_TOKEN");
+  console.error("Нужны SAPPORTLY_API_KEY (или SUPPORTLY_API_KEY) и BOT_TOKEN");
   process.exit(1);
 }
 
-const client = new SupportlyClient({ apiKey });
-const inbox = new SupportlyInbox(client, { channels: [CHANNEL] });
+const client = new SapportlyClient({ apiKey });
+const inbox = new SapportlyInbox(client, { channels: [CHANNEL] });
 
 inbox.onVisitor((msg) => {
   console.log("visitor", msg.channel, msg.externalId, msg.body.slice(0, 80));

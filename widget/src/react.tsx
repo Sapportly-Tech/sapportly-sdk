@@ -1,37 +1,37 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { getSupportly, loadSupportly, supportlyLoaderKey } from "./loader";
+import { getSapportly, loadSapportly, supportlyLoaderKey } from "./loader";
 import { loaderOptionsFromEnv, type LoaderOptionsFromEnvOptions } from "./options";
 import type {
-  SupportlyClient,
-  SupportlyIdentifyTraits,
-  SupportlyLoaderOptions,
+  SapportlyClient,
+  SapportlyIdentifyTraits,
+  SapportlyLoaderOptions,
 } from "./types";
 
-export interface UseSupportlyOptions extends SupportlyLoaderOptions {
+export interface UseSapportlyOptions extends SapportlyLoaderOptions {
   /** Call `destroy()` when the hook unmounts (default: `false`). */
   destroyOnUnmount?: boolean;
   /** Skip automatic script injection — only attach to an existing widget. */
   manual?: boolean;
 }
 
-export interface UseSupportlyResult {
-  client: SupportlyClient | null;
+export interface UseSapportlyResult {
+  client: SapportlyClient | null;
   ready: boolean;
   error: Error | null;
   open: () => Promise<void>;
   close: () => Promise<void>;
   toggle: () => Promise<void>;
   track: (name: string, properties?: Record<string, unknown>) => void;
-  identify: (traits?: SupportlyIdentifyTraits) => Promise<{ ok: boolean }>;
+  identify: (traits?: SapportlyIdentifyTraits) => Promise<{ ok: boolean }>;
 }
 
 /** React hook — loads the widget (unless `manual`) and exposes the embed API. */
-export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
+export function useSapportly(options: UseSapportlyOptions): UseSapportlyResult {
   const { destroyOnUnmount = false, manual = false, ...loaderOptions } = options;
   const loaderKey = supportlyLoaderKey(loaderOptions);
 
-  const [client, setClient] = useState<SupportlyClient | null>(() =>
-    manual ? getSupportly() : null,
+  const [client, setClient] = useState<SapportlyClient | null>(() =>
+    manual ? getSapportly() : null,
   );
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -42,7 +42,7 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
     setReady(false);
     setError(null);
 
-    const attach = (instance: SupportlyClient) => {
+    const attach = (instance: SapportlyClient) => {
       if (cancelled) return;
       setClient(instance);
       setReady(true);
@@ -54,12 +54,12 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
     };
 
     if (manual) {
-      const existing = getSupportly();
+      const existing = getSapportly();
       if (existing) {
         existing.ready.then(() => attach(existing)).catch(fail);
       } else {
         const timer = setInterval(() => {
-          const live = getSupportly();
+          const live = getSapportly();
           if (live) {
             clearInterval(timer);
             live.ready.then(() => attach(live)).catch(fail);
@@ -76,12 +76,12 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
     }
 
     ownedRef.current = true;
-    loadSupportly(loaderOptions).then(attach).catch(fail);
+    loadSapportly(loaderOptions).then(attach).catch(fail);
 
     return () => {
       cancelled = true;
       if (destroyOnUnmount && ownedRef.current) {
-        getSupportly()?.destroy();
+        getSapportly()?.destroy();
         ownedRef.current = false;
       }
     };
@@ -108,7 +108,7 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
   );
 
   const identify = useCallback(
-    async (traits?: SupportlyIdentifyTraits) => {
+    async (traits?: SapportlyIdentifyTraits) => {
       if (!client) return { ok: false };
       return client.identify(traits);
     },
@@ -121,15 +121,15 @@ export function useSupportly(options: UseSupportlyOptions): UseSupportlyResult {
   );
 }
 
-export interface UseSupportlyFromEnvOptions
-  extends Omit<UseSupportlyOptions, "siteId">,
+export interface UseSapportlyFromEnvOptions
+  extends Omit<UseSapportlyOptions, "siteId">,
     LoaderOptionsFromEnvOptions {}
 
 /**
  * React hook — resolves Site ID from `siteId` prop or env vars, then loads the widget.
  * Set `NEXT_PUBLIC_SUPPORTLY_SITE_ID` (or `VITE_SUPPORTLY_SITE_ID`) for zero-config installs.
  */
-export function useSupportlyFromEnv(options: UseSupportlyFromEnvOptions = {}): UseSupportlyResult {
+export function useSapportlyFromEnv(options: UseSapportlyFromEnvOptions = {}): UseSapportlyResult {
   const resolved = useMemo(() => {
     try {
       return {
@@ -144,7 +144,7 @@ export function useSupportlyFromEnv(options: UseSupportlyFromEnvOptions = {}): U
     }
   }, [options.siteId, options.apiUrl, options.cdnUrl, options.wsUrl, options.version, options.envKeys]);
 
-  const hook = useSupportly(
+  const hook = useSapportly(
     resolved.loader
       ? { ...options, ...resolved.loader }
       : { ...options, siteId: "wgt_invalid", manual: true },
@@ -166,8 +166,8 @@ export function useSupportlyFromEnv(options: UseSupportlyFromEnvOptions = {}): U
   return hook;
 }
 
-export interface SupportlyWidgetProps extends SupportlyLoaderOptions {
-  onReady?: (client: SupportlyClient) => void;
+export interface SapportlyWidgetProps extends SapportlyLoaderOptions {
+  onReady?: (client: SapportlyClient) => void;
   onError?: (error: Error) => void;
   destroyOnUnmount?: boolean;
 }
@@ -176,19 +176,19 @@ export interface SupportlyWidgetProps extends SupportlyLoaderOptions {
  * Headless React component — injects the embed script and mounts the widget.
  * Renders nothing; the shell creates its own launcher in the DOM.
  */
-export function SupportlyWidget({
+export function SapportlyWidget({
   onReady,
   onError,
   destroyOnUnmount = true,
   ...loaderOptions
-}: SupportlyWidgetProps): ReactElement | null {
+}: SapportlyWidgetProps): ReactElement | null {
   const loaderKey = supportlyLoaderKey(loaderOptions);
 
   useEffect(() => {
-    let client: SupportlyClient | null = null;
+    let client: SapportlyClient | null = null;
     let cancelled = false;
 
-    loadSupportly(loaderOptions)
+    loadSapportly(loaderOptions)
       .then((instance) => {
         if (cancelled) return;
         client = instance;
@@ -210,8 +210,8 @@ export function SupportlyWidget({
 }
 
 /** Headless component — resolves Site ID from env when `siteId` prop is omitted. */
-export function SupportlyWidgetFromEnv(
-  props: Omit<SupportlyWidgetProps, "siteId"> & {
+export function SapportlyWidgetFromEnv(
+  props: Omit<SapportlyWidgetProps, "siteId"> & {
     siteId?: string;
     envKeys?: readonly string[];
   },
@@ -221,7 +221,7 @@ export function SupportlyWidgetFromEnv(
     () => loaderOptionsFromEnv({ siteId, apiUrl, cdnUrl, wsUrl, version, envKeys }),
     [siteId, apiUrl, cdnUrl, wsUrl, version, envKeys],
   );
-  return <SupportlyWidget {...rest} {...loaderOptions} />;
+  return <SapportlyWidget {...rest} {...loaderOptions} />;
 }
 
-export type { SupportlyClient, SupportlyIdentifyTraits, SupportlyLoaderOptions };
+export type { SapportlyClient, SapportlyIdentifyTraits, SapportlyLoaderOptions };

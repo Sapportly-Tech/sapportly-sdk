@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractMessageId, MessageDeduper } from "../src/dedup";
+import { ExternalMessageSeenStore, extractMessageId, MessageDeduper } from "../src/dedup";
 
 describe("MessageDeduper", () => {
   it("reports the first sighting as new and the second as seen", () => {
@@ -94,3 +94,26 @@ describe("extractMessageId", () => {
     expect(extractMessageId({ delivery: { delivery_id: "d1" } })).toBeUndefined();
   });
 });
+
+describe("MessageSeenStore adapters", () => {
+  it("MessageDeduper.claim matches seen", () => {
+    const store = new MessageDeduper();
+    expect(store.claim("m1")).toBe(false);
+    expect(store.claim("m1")).toBe(true);
+  });
+
+  it("ExternalMessageSeenStore delegates tryClaim", async () => {
+    const claimed = new Set<string>();
+    const store = new ExternalMessageSeenStore({
+      async tryClaim(id, ttlMs) {
+        expect(ttlMs).toBeGreaterThan(0);
+        if (claimed.has(id)) return true;
+        claimed.add(id);
+        return false;
+      },
+    });
+    expect(await store.claim("m1")).toBe(false);
+    expect(await store.claim("m1")).toBe(true);
+  });
+});
+

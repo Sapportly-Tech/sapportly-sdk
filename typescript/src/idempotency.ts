@@ -5,7 +5,12 @@
  * SDK fills one in when the caller does not. That is what makes the automatic
  * retry in the transport safe: a replayed POST resolves to the same message
  * instead of a duplicate.
+ *
+ * Keys MUST come from a CSPRNG (Web Crypto / `node:crypto`). A weak PRNG
+ * fallback would make retries forgeable across processes — we throw instead.
  */
+
+import { SapportlyConfigError } from "./errors";
 
 function webCrypto(): Crypto | undefined {
   return typeof globalThis.crypto === "object" ? globalThis.crypto : undefined;
@@ -60,15 +65,14 @@ function nodeRandomUuid(): string | undefined {
 /**
  * Returns a fresh idempotency key (1–128 chars, as the API requires).
  *
- * Prefers a crypto-random UUID v4. Without Web Crypto (Node 18) falls back
- * to `node:crypto` or a UUID-shaped unique string — uniqueness, not secrecy.
+ * Prefers a crypto-random UUID v4 (Web Crypto, then `node:crypto`).
+ * Throws {@link SapportlyConfigError} when no CSPRNG is available (P-10).
  */
 export function generateIdempotencyKey(): string {
   const uuid = randomUuidV4() ?? nodeRandomUuid();
   if (uuid) return uuid;
 
-  // Node 18 ESM: no global crypto, no require. Uniqueness only.
-  const bytes = new Uint8Array(16);
-  for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
-  return uuidFromBytes(bytes);
+  throw new SapportlyConfigError(
+    "cannot generate idempotency_key: no CSPRNG (need globalThis.crypto or node:crypto). Pass an explicit idempotency_key, or run on Node 18+ / a modern browser.",
+  );
 }

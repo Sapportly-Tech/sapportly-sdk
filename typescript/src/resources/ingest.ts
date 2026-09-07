@@ -21,8 +21,8 @@ export class IngestResource {
    * `custom:shop:{uuid}` — отдельный диалог в панели и для ИИ, тот же источник в аналитике.
    *
    * Без `idempotency_key` SDK ставит свой — ретрай не создаст дубль.
-   * 202 + `message_id: null` — новое, persist ещё идёт.
-   * 200 + заполненный `message_id` — ключ уже был, ничего нового.
+   * 202 — новое (stable `message_id` сразу, persist асинхронно).
+   * 200 + `duplicate: true` — ключ уже был, тот же `message_id`.
    */
   async send(request: IngestMessageRequest, options?: RequestOptions): Promise<MessageAccepted> {
     let channel = request.channel;

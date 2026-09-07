@@ -1,5 +1,54 @@
 # Changelog
 
+## Unreleased
+
+## 1.4.3 — 2026-09-08
+
+- **Security:** strip Authorization/X-Visitor-Token any casing; webhook tolerance
+  rejects NaN and syncs ReplayGuard TTL; atomic replay `claim`; `isValidWebhook`
+  does not burn default replay nonce; `ws_url` host allowlist; reply echo race
+  via pending idempotency keys (60s TTL).
+- SPEC → **2.2.3** (`webhooks:read` / `webhooks:write` on gateway; SDK documents
+  verify/replay/ws trust).
+
+## 1.4.2 — 2026-09-08
+
+- **Security:** webhook verify uses trimmed secret; default in-process replay guard;
+  inbox awaits async handlers; missing `message_id` fail-closed under dedup.
+
+## 1.4.1 — 2026-09-08
+
+- **Inbox opt-in release:** `MessageSeenStore.release` + `releaseOnHandlerError` (default still at-most-once).
+  Fleet: `ExternalSeenStoreHooks.tryRelease` (e.g. Redis `DEL`).
+- **DIY list warn:** bare `list`/`asList` logs a one-shot console warning; prefer `*Page` / `iterate*`.
+- SPEC → **2.2.2**.
+
+## 1.4.0 — 2026-09-07
+
+- **List envelope (gateway):** `X-Sapportly-List-Envelope` / `?envelope=true` wired on
+  conversations, messages, widget history, channels, contacts, assignment history.
+  Legacy header `X-Supportly-List-Envelope` still accepted. SDK also sends `?envelope=true`.
+- **Breaking (import path):** `SapportlyInbox` and wire helpers are exported only from
+  `@sapportly/sdk/realtime` (no longer from the main entry).
+- Docs: fix `@supportly/sdk` naming typo; canon env `SAPPORTLY_*` with `SUPPORTLY_*` alias;
+  `sapportly:` error `toString()`; `MessageAccepted.duplicate`; multi-worker / catch-up caps callouts.
+
+- **Breaking — SDK callback HMAC (BH-6).** Outgoing `conversation.escalated` (escalation webhook) is no longer signed with a key derived from the tenant UUID. Verify with the random secret from the panel (`POST /v1/sdk/callback-secret/rotate`, shown once like an API key). Closed beta: rotate the secret and update receivers.
+
+- **Polish:** SPEC dual-delivery at-most-once/`onError`; contacts/`assignmentHistory` `*Page`;
+  cap-only pagination docs; catch-up has_more test; advisory Term label unit test.
+
+- **P-08 pagination:** iterators honour list envelope `has_more` / `next_cursor`.
+  Stops when `has_more` is `false` even on a full page (no infinite loop). New
+  `ListPage` / `parseListBody` / `requestListPage`.
+- **P-09 inbox dedup:** `await` claim before emit; per-`message_id` claim queue so
+  concurrent dual delivery cannot double-fire. Document atomic `tryClaim` (Redis NX).
+- **P-10 idempotency:** no `Math.random` fallback — CSPRNG only or `SapportlyConfigError`.
+- **P-02:** `verifyWebhook` rejects empty/whitespace secrets (`missing_secret`).
+- **Errors:** HTTP 401 maps to `SapportlyAuthError` (aligned with P-04).
+- **Audit harden:** malformed `has_more` → stop; inbox handler errors → `onError`;
+  ZWSP webhook secrets rejected; README/JSDoc warn against DIY `list()` length loops.
+
 ## 1.3.0 — 2026-08-20
 
 - **Треды custom-каналов.** Источник остаётся `custom:shop` (реестр, аналитика).
@@ -10,14 +59,14 @@
   `conversationMatchesSource`, `parseConversationKey`.
 - `ingest.send` привязывает тред до POST. `MessageAccepted` отдаёт
   `channel` / `source_channel` / `thread_id`.
-- `SupportlyInbox` / realtime: фильтр `channels: ["custom:shop"]` ловит треды.
+- `SapportlyInbox` / realtime: фильтр `channels: ["custom:shop"]` ловит треды.
   `InboxMessage` несёт `sourceChannel`, `threadId`, `externalId`.
 - Reply из панели адресует тред; `onAgent` получает `externalId` для доставки
   человеку. Пример `examples/telegram-bot.ts` без `selectedChatId`.
 
 ## 1.2.1 — 2026-08-19
 
-- **npm package name:** `@sapportly/sdk` (org **sapportly**). There is no `@supportly/sdk` — that scope is unavailable for this SDK. The product and API remain Supportly.
+- **npm package name:** `@sapportly/sdk` (org **sapportly**). There is no `@supportly/sdk` — that scope is unavailable for this SDK. The product and API remain Sapportly.
 - **Inbox roles:** `assistant` is treated as an agent (`onAgent`); `system` is no longer routed to `onVisitor`.
 - **Echo set** for `inbox.reply` is capped so a missing echo cannot grow unbounded.
 - Wire helpers `isAgentRole` / `isAgentReply` / `isVisitorMessage` match the dashboard mapping.
@@ -28,7 +77,7 @@
 ## 1.2.0 — 2026-08-19
 
 - **Contacts:** `client.contacts.list/get/upsert` → `/v1/contacts`.
-- **List envelope:** SDK sends `X-Supportly-List-Envelope: 1` and unwraps `{ data }`, still accepts a bare array.
+- **List envelope:** SDK sends `X-Sapportly-List-Envelope: 1` and unwraps `{ data }`, still accepts a bare array.
 - **Idempotency-Key** header is sent alongside `idempotency_key` in the body.
 - **Structured errors:** `code`, `type`, `docsUrl`, `requestId` from the JSON body; `message` preferred over `error`.
 - **Rate-limit headers** are parsed into `client.rateLimit`.
@@ -39,12 +88,12 @@
 
 - Канал — источник для аналитики (`custom:telegram`), не тред на chat_id.
   Хелперы `channelKey` / `channelIdentifier`. Пример `examples/telegram-bot.ts`.
-- `SupportlyInbox`: `echo` на кадрах своего `reply`, чтобы бот не слал в Telegram дважды.
+- `SapportlyInbox`: `echo` на кадрах своего `reply`, чтобы бот не слал в Telegram дважды.
 - Комментарии в коде: ingest vs reply, шифрование body, дедуп `ai.draft`.
 
 ## 1.1.0 — 2026-08-14
 
-- **`SupportlyInbox`** (`@sapportly/sdk/realtime`): reconnecting socket with
+- **`SapportlyInbox`** (`@sapportly/sdk/realtime`): reconnecting socket with
   `onVisitor` / `onAgent` / `onAi`, channel filter, reply helper, async
   iterator. Integrator bots no longer mint tickets by hand.
 - **Wire helpers:** `parseWireEvent`, `classifyWireEvent` — frames without
@@ -62,7 +111,7 @@ upgrade.
 ### Removed
 
 - **`client.dashboard.*`** — the panel/internal API. Those routes live on
-  `app.supportly.cc` behind a session JWT, RBAC, and a proxy gate; they were
+  `app.sapportly.pro` behind a session JWT, RBAC, and a proxy gate; they were
   never usable with an API key and shipping them in a public SDK implied a
   support contract that does not exist. Includes `inboxUnread()` and
   `markRead()`, which reached `/v1/inbox/unread` and
@@ -78,7 +127,7 @@ upgrade.
 
 - **Timestamped webhook verification.** `verifyWebhook`,
   `verifyWebhookRequest`, and `isValidWebhook` check
-  `X-Supportly-Timestamp` + `X-Supportly-Signature` over `"{timestamp}.{body}"`
+  `X-Sapportly-Timestamp` + `X-Sapportly-Signature` over `"{timestamp}.{body}"`
   with a 300-second window and a constant-time compare. The previous helper
   verified the body alone, which left captured requests replayable
   indefinitely.
@@ -98,7 +147,7 @@ upgrade.
 - **Team roles** — `team.listRoles()` (`team:read`).
 - **Custom metrics** — `analytics.track()` (`analytics:write`).
 - **Attachment download** — `attachments.get()` and `attachments.download()`.
-- **Reconnecting realtime** — `SupportlyRealtime` mints a fresh ticket per
+- **Reconnecting realtime** — `SapportlyRealtime` mints a fresh ticket per
   reconnect, since tickets are single-use.
 - `client.rateLimit`, `setApiKey()`, per-request `timeoutMs` / `retry` /
   `signal` overrides.
@@ -106,7 +155,7 @@ upgrade.
 ### Changed
 
 - Package is now part of the pnpm workspace; tests run on the monorepo's
-  vitest, and the dual ESM/CJS build uses esbuild like `@supportly/widget-sdk`
+  vitest, and the dual ESM/CJS build uses esbuild like `@sapportly/widget-sdk`
   (tsup and the standalone `package-lock.json` are gone).
 - `sideEffects: false`; `./package.json` added to the `exports` map.
 - Node 18 is still supported: no `AbortSignal.any`, no Node-only imports in any
@@ -127,7 +176,7 @@ upgrade.
 
 - `client.conversations.list/messages/reply` (API key + `conversations:*`).
 - `client.attachments.upload()` — intent → presigned PUT → complete.
-- `client.realtime.issueTicket()`, `SupportlyRealtime.connect()` (`ws:connect`).
+- `client.realtime.issueTicket()`, `SapportlyRealtime.connect()` (`ws:connect`).
 - `MessageDeduper`, `extractMessageId()` for dual-delivery dedup.
 - Subpath export `@sapportly/sdk/realtime`.
 

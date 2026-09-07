@@ -2,9 +2,10 @@
  * Keyset pagination helpers.
  *
  * List endpoints still accept a bare JSON array (compat). The SDK always asks
- * for the envelope (`X-Supportly-List-Envelope: 1`) and unwraps `{ data }` so
- * callers keep iterating over items. "Is there more?" is still page size:
- * a short page is the last page.
+ * for the envelope (`X-Sapportly-List-Envelope: 1`) and unwraps `{ data }` so
+ * callers keep iterating over items. Termination prefers the envelope's
+ * `has_more` (and `next_cursor` when present); a short page remains a fallback
+ * for bare-array responses.
  */
 
 export interface PaginationLimits {
@@ -20,29 +21,72 @@ export interface ListEnvelope<T> {
   next_cursor?: unknown;
 }
 
+/** One decoded list page — items plus optional envelope metadata (P-08). */
+export interface ListPage<T> {
+  items: T[];
+  /**
+   * From `{ has_more }`. When `false`, iteration MUST stop even if the page is
+   * full (`length === limit`). When `undefined` (bare array), fall back to
+   * `items.length < limit`.
+   */
+  hasMore?: boolean;
+  /** Server-supplied cursor object when the envelope included `next_cursor`. */
+  nextCursor?: unknown;
+}
+
 /** Accepts both a bare array and `{ data, has_more, next_cursor }`. */
 export function unwrapList<T>(body: unknown): T[] {
-  if (Array.isArray(body)) return body as T[];
+  return parseListBody<T>(body).items;
+}
+
+/** Decode a list response without dropping `has_more` / `next_cursor`. */
+export function parseListBody<T>(body: unknown): ListPage<T> {
+  if (Array.isArray(body)) return { items: body as T[] };
   if (body && typeof body === "object" && "data" in body) {
-    const data = (body as ListEnvelope<T>).data;
-    if (Array.isArray(data)) return data;
+    const env = body as ListEnvelope<T>;
+    if (Array.isArray(env.data)) {
+      return {
+        items: env.data,
+        // Malformed non-boolean has_more → stop (false), not bare-array continue.
+        hasMore:
+          typeof env.has_more === "boolean"
+            ? env.has_more
+            : "has_more" in env
+              ? false
+              : undefined,
+        nextCursor: "next_cursor" in env ? env.next_cursor : undefined,
+      };
+    }
   }
-  return [];
+  return { items: [] };
+}
+
+function asListPage<Item>(page: ListPage<Item> | Item[]): ListPage<Item> {
+  return Array.isArray(page) ? { items: page } : page;
 }
 
 export interface PaginateConfig<Item, Cursor> extends PaginationLimits {
-  /** Page size sent to the API. A page smaller than this ends the iteration. */
+  /** Page size sent to the API. */
   limit: number;
-  fetchPage: (cursor: Cursor | undefined) => Promise<Item[]>;
+  /**
+   * Fetch one page. May return a bare `Item[]` (tests / legacy) or a
+   * {@link ListPage} that preserves `has_more` / `next_cursor`.
+   */
+  fetchPage: (cursor: Cursor | undefined) => Promise<ListPage<Item> | Item[]>;
   /** Reads the cursor for the next request off the page just received. */
   cursorFrom: (page: Item[]) => Cursor | undefined;
+  /**
+   * Prefer the envelope `next_cursor` when present. Return `undefined` to fall
+   * back to {@link cursorFrom}.
+   */
+  cursorFromEnvelope?: (nextCursor: unknown, page: Item[]) => Cursor | undefined;
 }
 
 /** Yields one page (array) at a time. Useful for batch processing. */
 export async function* paginatePages<Item, Cursor>(
   config: PaginateConfig<Item, Cursor>,
 ): AsyncGenerator<Item[], void, undefined> {
-  const { limit, fetchPage, cursorFrom, maxItems, maxPages } = config;
+  const { limit, fetchPage, cursorFrom, cursorFromEnvelope, maxItems, maxPages } = config;
 
   let cursor: Cursor | undefined;
   let pages = 0;
@@ -51,24 +95,33 @@ export async function* paginatePages<Item, Cursor>(
   for (;;) {
     if (maxPages !== undefined && pages >= maxPages) return;
 
-    const page = await fetchPage(cursor);
+    const page = asListPage(await fetchPage(cursor));
     pages += 1;
 
-    if (page.length === 0) return;
+    if (page.items.length === 0) return;
 
-    if (maxItems !== undefined && items + page.length >= maxItems) {
-      yield page.slice(0, maxItems - items);
+    if (maxItems !== undefined && items + page.items.length >= maxItems) {
+      yield page.items.slice(0, maxItems - items);
       return;
     }
 
-    items += page.length;
-    yield page;
+    items += page.items.length;
+    yield page.items;
 
-    // A short page means the server had nothing left to give.
-    if (page.length < limit) return;
+    // P-08: envelope has_more=false stops even on a full page.
+    if (page.hasMore === false) return;
 
-    const next = cursorFrom(page);
+    // Bare array / missing has_more: short page is the last page.
+    if (page.hasMore === undefined && page.items.length < limit) return;
+
+    const fromEnvelope =
+      page.nextCursor !== undefined && cursorFromEnvelope
+        ? cursorFromEnvelope(page.nextCursor, page.items)
+        : undefined;
+    const next = fromEnvelope ?? cursorFrom(page.items);
+    // Missing cursor (even if has_more=true) — stop rather than loop forever.
     if (next === undefined) return;
+
     cursor = next;
   }
 }
