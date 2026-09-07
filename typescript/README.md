@@ -487,7 +487,7 @@ pnpm --filter @sapportly/sdk typecheck
 pnpm --filter @sapportly/sdk build
 ```
 
-Releases are semver tags (`v1.4.3`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
+Releases are semver tags (`v1.4.4`) on this repository. See [`../PUBLISHING.md`](../PUBLISHING.md).
 
 ## License
 

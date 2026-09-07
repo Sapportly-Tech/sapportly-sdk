@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.4.4 — 2026-09-08
+
+- Docs/package: GitHub repo renamed to [Sapportly-Tech/sapportly-sdk](https://github.com/Sapportly-Tech/sapportly-sdk).
+
 ## 1.4.3 — 2026-09-08
 
 - **Security:** strip Authorization/X-Visitor-Token any casing; webhook tolerance

@@ -1,7 +1,7 @@
 {
   "name": "@sapportly/sdk",
-  "version": "1.4.3",
-  "description": "Sapportly TypeScript SDK (@sapportly/sdk) — official client for the Sapportly public API. Not @supportly/sdk: that npm name is unavailable.",
+  "version": "1.4.4",
+  "description": "Sapportly TypeScript SDK (@sapportly/sdk) \u2014 official client for the Sapportly public API. Not @supportly/sdk: that npm name is unavailable.",
   "license": "MIT",
   "author": "Sapportly <ac@sapportly.pro>",
   "repository": {
